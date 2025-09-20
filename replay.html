@@ -1,0 +1,194 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="UTF-8">
+  <title>遊戲回放</title>
+  <link rel="icon" type="image/x-icon" href="favicon.ico">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <style>
+    body {
+      background-color: #000;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      color: white;
+      font-family: "微軟正黑體", sans-serif;
+      margin: 0;
+    }
+    canvas {
+      background-color: #111;
+      border: 3px solid #fff;
+      margin-top: 10px;
+    }
+    #replay-status { margin: 10px; }
+    #controls {
+      margin-top: 10px;
+      display: flex;
+      gap: 10px;
+      align-items: center;
+    }
+    .btn {
+      background: #444;
+      color: white;
+      padding: 10px 20px;
+      border-radius: 10px;
+      font-size: 16px;
+      user-select: none;
+      cursor: pointer;
+    }
+    .btn:active { background: #777; }
+    /* 進度條樣式 */
+    #progress-slider {
+      width: 400px;
+      margin-top: 15px;
+      cursor: pointer;
+    }
+    #back-link {
+        color: #6cf;
+        margin-top: 20px;
+        font-size: 18px;
+        text-decoration: none;
+    }
+    #back-link:hover { text-decoration: underline; }
+  </style>
+</head>
+<body>
+  <h1>🐍 遊戲回放</h1>
+  <p id="replay-status">載入中...</p>
+  <canvas id="game" width="400" height="400"></canvas>
+  <input type="range" id="progress-slider" value="0" step="1">
+  <div id="controls">
+    <div class="btn" id="restart-btn">⏮️ 重頭</div>
+    <div class="btn" id="play-pause-btn">▶️ 播放</div>
+    <div id="frame-counter">0 / 0</div>
+  </div>
+  <a id="back-link" href="index.html">返回遊戲</a>
+
+  <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-app.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-firestore.js"></script>
+
+  <script>
+    // --- Firebase 設定 ---
+const firebaseConfig = {
+  apiKey: "AIzaSyAws3ju6gXhWUX8OTfxiO173DvznF_ja8s",
+  authDomain: "cogent-altar-468009-p7.firebaseapp.com",
+  projectId: "cogent-altar-468009-p7",
+  storageBucket: "cogent-altar-468009-p7.firebasestorage.app",
+  messagingSenderId: "849610525376",
+  appId: "1:849610525376:web:9208810240d3b60834fb25"
+};
+
+
+    // 初始化 Firebase
+    firebase.initializeApp(firebaseConfig);
+    const db = firebase.firestore();
+
+    // --- 回放程式碼 ---
+    const canvas = document.getElementById("game");
+    const ctx = canvas.getContext("2d");
+    const statusText = document.getElementById("replay-status");
+    const playPauseBtn = document.getElementById("play-pause-btn");
+    const restartBtn = document.getElementById("restart-btn");
+    const progressSlider = document.getElementById("progress-slider");
+    const frameCounter = document.getElementById("frame-counter");
+
+    const gridSize = 20;
+    let replayData = [];
+    let currentFrameIndex = 0;
+    let isPlaying = false;
+    let playbackInterval;
+
+    function drawFrame(index) {
+      const frame = replayData[index];
+      if (!frame) return;
+
+      currentFrameIndex = index;
+      
+      ctx.clearRect(0, 0, canvas.width, canvas.height);
+      ctx.fillStyle = "red";
+      ctx.fillRect(frame.apple.x * gridSize, frame.apple.y * gridSize, gridSize, gridSize);
+      ctx.fillStyle = "lime";
+      for (let s of frame.snake) {
+        ctx.fillRect(s.x * gridSize, s.y * gridSize, gridSize - 1, gridSize - 1);
+      }
+      ctx.fillStyle = "white";
+      ctx.font = "16px sans-serif";
+      ctx.fillText("分數：" + frame.score, 10, 390);
+
+      // 更新進度條和計數器
+      progressSlider.value = index;
+      frameCounter.textContent = `${index + 1} / ${replayData.length}`;
+    }
+
+    function togglePlayPause() {
+        isPlaying ? pause() : play();
+    }
+
+    function play() {
+        if (currentFrameIndex >= replayData.length - 1) return;
+        isPlaying = true;
+        playPauseBtn.textContent = "⏸️ 暫停";
+        playbackInterval = setInterval(() => {
+            if (currentFrameIndex < replayData.length - 1) {
+                drawFrame(currentFrameIndex + 1);
+            } else {
+                pause();
+            }
+        }, 150);
+    }
+
+    function pause() {
+        isPlaying = false;
+        playPauseBtn.textContent = "▶️ 播放";
+        clearInterval(playbackInterval);
+    }
+
+    function restart() {
+        pause();
+        drawFrame(0);
+    }
+
+    async function initializeReplay() {
+      // 從 URL 讀取回放 ID
+      const urlParams = new URLSearchParams(window.location.search);
+      const replayId = urlParams.get('id');
+
+      if (!replayId) {
+        statusText.textContent = "錯誤：URL 中找不到回放 ID。";
+        return;
+      }
+
+      try {
+        statusText.textContent = "正在從 Firebase 讀取紀錄...";
+        const doc = await db.collection("replays").doc(replayId).get();
+
+        if (doc.exists) {
+          replayData = doc.data().history;
+          statusText.textContent = `成功載入！最終分數：${doc.data().finalScore}`;
+          
+          // 設定進度條
+          progressSlider.max = replayData.length - 1;
+          
+          // 繪製第一幀
+          drawFrame(0);
+
+          // 啟用控制按鈕
+          playPauseBtn.addEventListener("click", togglePlayPause);
+          restartBtn.addEventListener("click", restart);
+          progressSlider.addEventListener("input", (e) => {
+              pause();
+              drawFrame(parseInt(e.target.value));
+          });
+        } else {
+          statusText.textContent = "錯誤：在資料庫中找不到這個回放紀錄。";
+        }
+      } catch (error) {
+        console.error("Error fetching replay: ", error);
+        statusText.textContent = "讀取紀錄失敗，請檢查主控台錯誤訊息。";
+      }
+    }
+
+    initializeReplay();
+  </script>
+</body>
+</html>
