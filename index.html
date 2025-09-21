@@ -169,24 +169,30 @@
     document.getElementById("left").addEventListener("click", () => handleTouch("left"));
     document.getElementById("right").addEventListener("click", () => handleTouch("right"));
 
-    async function saveReplayToFirebase() {
-      try {
-        statusText.innerText = "正在上傳紀錄...";
-        const replayDoc = await db.collection("replays").add({
-          history: gameHistory,
-          finalScore: score,
-          createdAt: firebase.firestore.FieldValue.serverTimestamp()
-        });
-        console.log("Replay saved with ID: ", replayDoc.id);
-        replayLink.href = `replay.html?id=${replayDoc.id}`;
-        replayLink.style.display = "block";
-        statusText.innerText = "遊戲結束！你的分數是：" + score + "，請按 Enter 重新開始";
-      } catch (error) {
-        console.error("Error saving replay: ", error);
-        statusText.innerText = "儲存紀錄失敗，請檢查主控台錯誤訊息。";
-      }
-    }
+  async function saveReplayToFirebase() {
+    try {
+      statusText.innerText = "正在執行最終測試...";
+      console.log("正在嘗試寫入一個簡單的、固定的測試物件...");
 
+      // 我們不再傳送遊戲變數，而是傳送一個固定的、簡單的物件
+      await db.collection("replays").add({
+        history: ["test_data"],  // <--- 極度簡化的資料
+        finalScore: 999,           // <--- 極度簡化的資料
+        createdAt: firebase.firestore.FieldValue.serverTimestamp()
+      });
+
+      // 如果上面這行成功執行，就會看到成功訊息
+      console.log("測試寫入成功！");
+      statusText.innerText = "測試成功！請立刻檢查 Firebase 控制台！";
+      alert("測試成功！請檢查 Firebase 控制台的 'replays' 集合！");
+
+    } catch (error) {
+      // 如果還是失敗，我們會在這裡看到錯誤
+      console.error("測試寫入失敗！錯誤詳情:", error);
+      statusText.innerText = "測試失敗，請檢查主控台。";
+      alert("測試仍然失敗，請檢查主控台的錯誤訊息。");
+    }
+  }
     function gameLoop() {
       if (!started || gameOver) return;
 
