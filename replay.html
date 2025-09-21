@@ -37,7 +37,6 @@
       cursor: pointer;
     }
     .btn:active { background: #777; }
-    /* 進度條樣式 */
     #progress-slider {
       width: 400px;
       margin-top: 15px;
@@ -68,7 +67,7 @@
   <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-firestore.js"></script>
 
   <script>
-    // --- Firebase 設定 ---
+    // --- Firebase 設定 (使用你建立的全新設定) ---
     const firebaseConfig = {
       apiKey: "AIzaSyAtkZyxuP2alDTUm1AA7EAlPYSvvZAznEI",
       authDomain: "cogent-altar-468009-p7.firebaseapp.com",
@@ -100,7 +99,6 @@
     function drawFrame(index) {
       const frame = replayData[index];
       if (!frame) return;
-
       currentFrameIndex = index;
       
       ctx.clearRect(0, 0, canvas.width, canvas.height);
@@ -114,7 +112,6 @@
       ctx.font = "16px sans-serif";
       ctx.fillText("分數：" + frame.score, 10, 390);
 
-      // 更新進度條和計數器
       progressSlider.value = index;
       frameCounter.textContent = `${index + 1} / ${replayData.length}`;
     }
@@ -148,7 +145,6 @@
     }
 
     async function initializeReplay() {
-      // 從 URL 讀取回放 ID
       const urlParams = new URLSearchParams(window.location.search);
       const replayId = urlParams.get('id');
 
@@ -165,13 +161,9 @@
           replayData = doc.data().history;
           statusText.textContent = `成功載入！最終分數：${doc.data().finalScore}`;
           
-          // 設定進度條
           progressSlider.max = replayData.length - 1;
-          
-          // 繪製第一幀
           drawFrame(0);
 
-          // 啟用控制按鈕
           playPauseBtn.addEventListener("click", togglePlayPause);
           restartBtn.addEventListener("click", restart);
           progressSlider.addEventListener("input", (e) => {
