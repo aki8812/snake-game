@@ -169,13 +169,14 @@
 
       if (head.x === apple.x && head.y === apple.y) {
         score++;
-        // 【注意】為了讓回放 100% 精準，我們需要讓蘋果生成的位置是可預測的
-        // 這裡我們暫時保留隨機，但在專業系統中會使用種子碼 (seed)
+        // 【重要】蘋果生成邏輯與回放頁面 (replay.html) 統一，確保回放準確
+        // 使用一個簡單的偽隨機算法，僅依賴蛇的狀態
+        let newX, newY;
         do {
-          apple = {
-            x: Math.floor(Math.random() * tileCount),
-            y: Math.floor(Math.random() * tileCount),
-          };
+          // 這個演算法確保在給定相同的蛇的狀態和分數時，蘋果總是在同一個地方生成
+          newX = (snake[0].x * 3 + snake[1].x * 5 + score) % tileCount;
+          newY = (snake[0].y * 7 + snake[1].y * 2 + score) % tileCount;
+          apple = { x: newX, y: newY };
         } while (snake.some(s => s.x === apple.x && s.y === apple.y));
       } else {
         snake.pop();
