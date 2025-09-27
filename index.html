@@ -26,7 +26,7 @@
     <div></div> <div class="btn" id="up">↑</div> <div></div>
     <div class="btn" id="left">←</div> <div class="btn" id="down">↓</div> <div class="btn" id="right">→</div>
   </div>
-  
+
   <a id="replay-link" href="#" target="_blank" style="display:none;">分享你的上一局回放！</a>
 
   <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-app.js"></script>
@@ -54,9 +54,9 @@
     const gridSize = 20;
     const tileCount = canvas.width / gridSize;
 
-    let snake, apple, dx, dy, score, bestScore, started, gameOver;
+    let snake, apple, dx, dy, score, bestScore, started, gameOver, frameCount;
     // --- 【修改 1】變數用途變更 ---
-    let gameHistory; // 現在只儲存玩家操作指令 ('u', 'd', 'l', 'r')
+    let gameHistory; // 現在儲存帶有時間戳的玩家操作指令
     let initialState;  // 新增：用來儲存遊戲的初始狀態
 
     bestScore = parseInt(localStorage.getItem("bestScore")) || 0;
@@ -68,9 +68,10 @@
       dx = 0; dy = 0;
       score = 0;
       started = false; gameOver = false;
-      
+      frameCount = 0; // 新增：幀計數器
+
       // --- 【修改 2】儲存初始狀態，並清空操作歷史 ---
-      gameHistory = []; 
+      gameHistory = [];
       initialState = {
           snake: JSON.parse(JSON.stringify(snake)),
           apple: { ...apple }
@@ -81,12 +82,12 @@
     }
 
     resetGame();
-    
+
     function handleDirectionChange(newDx, newDy, moveCode) {
         dx = newDx;
         dy = newDy;
-        // --- 【修改 3】只有方向改變時，才記錄指令 ---
-        gameHistory.push(moveCode);
+        // --- 【修改 3】記錄帶有幀數的指令 ---
+        gameHistory.push({ frame: frameCount, move: moveCode });
     }
 
     document.addEventListener("keydown", (e) => {
@@ -148,9 +149,7 @@
     function gameLoop() {
       if (!started || gameOver) return;
 
-      // 【重要】移除舊的、會造成檔案過大的 frame-by-frame 紀錄
-      // const currentFrame = { ... };
-      // gameHistory.push(currentFrame); // <-- 這行已刪除
+      frameCount++; // 【新增】每幀都增加計數器
 
       const head = { x: snake[0].x + dx, y: snake[0].y + dy };
 
