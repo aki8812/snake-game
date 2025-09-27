@@ -55,7 +55,7 @@
     const tileCount = canvas.width / gridSize;
 
     let snake, apple, dx, dy, score, bestScore, frameCount;
-    let gameHistory, initialState, appleHistory;
+    let gameHistory, initialState;
     let gameState = 'initial'; // 'initial', 'playing', 'gameOver'
 
     bestScore = parseInt(localStorage.getItem("bestScore")) || 0;
@@ -69,7 +69,6 @@
       gameState = 'initial';
       frameCount = 0;
       gameHistory = [];
-      appleHistory = [{ ...apple, frame: 0 }]; // 初始化並記錄第一顆蘋果
       initialState = {
           snake: JSON.parse(JSON.stringify(snake)),
           apple: { ...apple }
@@ -168,7 +167,6 @@
         const replayDoc = await db.collection("replays").add({
           initialState: initialState,
           moves: gameHistory,
-          appleHistory: appleHistory, // 新增
           finalScore: score,
           createdAt: firebase.firestore.FieldValue.serverTimestamp()
         });
@@ -189,7 +187,6 @@
         const replayDoc = await db.collection("replays").add({
           initialState: initialState,
           moves: gameHistory,
-          appleHistory: appleHistory, // 新增
           finalScore: score,
           createdAt: firebase.firestore.FieldValue.serverTimestamp()
         });
@@ -231,7 +228,7 @@
           return;
         }
 
-        // 【修復】使用更可靠的方法生成新蘋果，避免無限迴圈
+        // 【修復】使用確定性演算法生成新蘋果，確保回放一致性
         const emptyCells = [];
         const snakeCellSet = new Set(snake.map(s => `${s.x},${s.y}`));
 
@@ -244,8 +241,9 @@
         }
 
         if (emptyCells.length > 0) {
-          apple = emptyCells[Math.floor(Math.random() * emptyCells.length)];
-          appleHistory.push({ ...apple, frame: frameCount }); // 新增：記錄新蘋果的位置和影格
+          const head = snake[0]; // 使用蛇頭和分數作為確定性因子
+          const deterministicIndex = (head.x * 7 + head.y * 13 + score * 17) % emptyCells.length;
+          apple = emptyCells[deterministicIndex];
         } else {
           // 如果沒有空位，這本身就是勝利條件
           // 雖然前面已經有檢查，但這裡再次調用以確保萬無一失
