@@ -106,14 +106,13 @@
     }
 
     // --- 【最終修改】以絕對精準的時序重寫回放引擎 ---
-    function generateFramesFromHistory(initialState, moves, appleHistory) {
+    function generateFramesFromHistory(initialState, moves) {
         let snake = JSON.parse(JSON.stringify(initialState.snake));
         let apple = { ...initialState.apple };
         let score = 0;
         let dx = 0, dy = 0; // 遊戲開始時是靜止的
         let frameCount = 0;
         let moveIndex = 0;
-        let appleIndex = 1; // 從第二顆蘋果開始讀取
         const generatedFrames = [];
 
         // 遊戲開始時，如果沒有立即的操作，預設一個初始方向 (向右)
@@ -162,10 +161,22 @@
                     });
                     break;
                 }
-                // 【修復】不再隨機生成，而是從歷史紀錄中讀取
-                if (appleIndex < appleHistory.length) {
-                    apple = appleHistory[appleIndex];
-                    appleIndex++;
+                // 【修復】使用與 index.html 同步的確定性演算法
+                const emptyCells = [];
+                const snakeCellSet = new Set(snake.map(s => `${s.x},${s.y}`));
+                for (let x = 0; x < tileCount; x++) {
+                    for (let y = 0; y < tileCount; y++) {
+                        if (!snakeCellSet.has(`${x},${y}`)) {
+                            emptyCells.push({ x, y });
+                        }
+                    }
+                }
+                if (emptyCells.length > 0) {
+                    const head = snake[0]; // 使用蛇頭和分數作為確定性因子
+                    const deterministicIndex = (head.x * 7 + head.y * 13 + score * 17) % emptyCells.length;
+                    apple = emptyCells[deterministicIndex];
+                } else {
+                    break;
                 }
             } else {
                 snake.pop();
@@ -192,13 +203,9 @@
 
         if (doc.exists) {
           const data = doc.data();
-          if (!data.appleHistory) {
-              statusText.textContent = "錯誤：這是一個舊版的回放紀錄，缺少蘋果位置資料，無法播放。";
-              return;
-          }
           statusText.textContent = "正在產生回放畫面...";
 
-          replayData = generateFramesFromHistory(data.initialState, data.moves, data.appleHistory);
+          replayData = generateFramesFromHistory(data.initialState, data.moves);
 
           if (replayData.length === 0) {
               statusText.textContent = "錯誤：無法生成回放資料，可能是紀錄有問題。";
