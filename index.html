@@ -55,9 +55,8 @@
     const tileCount = canvas.width / gridSize;
 
     let snake, apple, dx, dy, score, bestScore, started, gameOver, frameCount;
-    // --- 【修改 1】變數用途變更 ---
-    let gameHistory; // 現在儲存帶有時間戳的玩家操作指令
-    let initialState;  // 新增：用來儲存遊戲的初始狀態
+    let gameHistory;
+    let initialState;
 
     bestScore = parseInt(localStorage.getItem("bestScore")) || 0;
     bestScoreText.innerText = "最佳分數：" + bestScore;
@@ -68,15 +67,12 @@
       dx = 0; dy = 0;
       score = 0;
       started = false; gameOver = false;
-      frameCount = 0; // 新增：幀計數器
-
-      // --- 【修改 2】儲存初始狀態，並清空操作歷史 ---
+      frameCount = 0;
       gameHistory = [];
       initialState = {
           snake: JSON.parse(JSON.stringify(snake)),
           apple: { ...apple }
       };
-
       replayLink.style.display = "none";
       statusText.innerText = "請按 Enter 或觸控方向鍵開始";
     }
@@ -86,7 +82,6 @@
     function handleDirectionChange(newDx, newDy, moveCode) {
         dx = newDx;
         dy = newDy;
-        // --- 【修改 3】記錄帶有幀數的指令 ---
         gameHistory.push({ frame: frameCount, move: moveCode });
     }
 
@@ -100,7 +95,7 @@
           else if (e.key === "ArrowDown") handleDirectionChange(0, 1, 'd');
           else if (e.key === "ArrowLeft") handleDirectionChange(-1, 0, 'l');
           else if (e.key === "ArrowRight") handleDirectionChange(1, 0, 'r');
-          else if (e.key === "Enter") handleDirectionChange(1, 0, 'r'); // 預設向右
+          else if (e.key === "Enter") handleDirectionChange(1, 0, 'r');
         }
         return;
       }
@@ -114,7 +109,7 @@
       if (gameOver) { resetGame(); return; }
       if (!started) {
         started = true; statusText.innerText = "";
-        if (dx === 0 && dy === 0) handleDirectionChange(1, 0, 'r'); // 預設向右
+        if (dx === 0 && dy === 0) handleDirectionChange(1, 0, 'r');
       }
       if (direction === "up" && dy === 0) handleDirectionChange(0, -1, 'u');
       else if (direction === "down" && dy === 0) handleDirectionChange(0, 1, 'd');
@@ -126,10 +121,35 @@
     document.getElementById("left").addEventListener("click", () => handleTouch("left"));
     document.getElementById("right").addEventListener("click", () => handleTouch("right"));
 
+    async function handleWin() {
+      gameOver = true;
+      if (score > bestScore) {
+        bestScore = score;
+        localStorage.setItem("bestScore", bestScore);
+        bestScoreText.innerText = "最佳分數：" + bestScore;
+      }
+
+      try {
+        statusText.innerText = "正在上傳紀錄...";
+        const replayDoc = await db.collection("replays").add({
+          initialState: initialState,
+          moves: gameHistory,
+          finalScore: score,
+          createdAt: firebase.firestore.FieldValue.serverTimestamp()
+        });
+        console.log("Replay saved with ID: ", replayDoc.id);
+        replayLink.href = `replay.html?id=${replayDoc.id}`;
+        replayLink.style.display = "block";
+        statusText.innerText = "恭喜你！完全勝利！請按 Enter 重新開始";
+      } catch (error) {
+        console.error("Error saving replay: ", error);
+        statusText.innerText = "儲存紀錄失敗，請檢查主控台錯誤訊息。";
+      }
+    }
+
     async function saveReplayToFirebase() {
       try {
         statusText.innerText = "正在上傳紀錄...";
-        // --- 【修改 4】上傳新的資料結構 ---
         const replayDoc = await db.collection("replays").add({
           initialState: initialState,
           moves: gameHistory,
@@ -149,7 +169,7 @@
     function gameLoop() {
       if (!started || gameOver) return;
 
-      frameCount++; // 【新增】每幀都增加計數器
+      frameCount++;
 
       const head = { x: snake[0].x + dx, y: snake[0].y + dy };
 
@@ -168,12 +188,16 @@
 
       if (head.x === apple.x && head.y === apple.y) {
         score++;
-        // 【重要】蘋果生成邏輯與回放頁面 (replay.html) 統一，確保回放準確
-        // 使用一個簡單的偽隨機算法，僅依賴蛇的狀態
+
+        // 【新增】勝利條件判斷：如果蛇身填滿畫面，則獲勝
+        if (snake.length >= tileCount * tileCount) {
+          handleWin();
+          return;
+        }
+
         let newX, newY;
         do {
-          // 這個演算法確保在給定相同的蛇的狀態和分數時，蘋果總是在同一個地方生成
-          const tail = snake.length > 1 ? snake[1] : snake[0]; // 防禦性程式碼，防止蛇長度小於2時出錯
+          const tail = snake.length > 1 ? snake[1] : snake[0];
           newX = (snake[0].x * 3 + tail.x * 5 + score) % tileCount;
           newY = (snake[0].y * 7 + tail.y * 2 + score) % tileCount;
           apple = { x: newX, y: newY };
