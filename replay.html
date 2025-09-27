@@ -19,6 +19,7 @@
 </head>
 <body>
   <h1>🐍 遊戲回放</h1>
+  <p style="color: #ffcc00; font-size: 14px; margin: -5px 0 10px 0;">請務必記住此網址連結 開始下一場遊戲後你就回不來了!</p>
   <p id="replay-status">載入中...</p>
   <canvas id="game" width="400" height="400"></canvas>
   <input type="range" id="progress-slider" value="0" step="1">
@@ -217,6 +218,15 @@
               pause();
               drawFrame(parseInt(e.target.value));
           });
+
+          // 新增：監聽空白鍵來播放/暫停
+          document.addEventListener('keydown', (e) => {
+            if (e.code === 'Space') {
+              e.preventDefault(); // 防止頁面滾動
+              togglePlayPause();
+            }
+          });
+
         } else {
           statusText.textContent = "錯誤：在資料庫中找不到這個回放紀錄。";
         }
@@ -226,7 +236,15 @@
       }
     }
 
+    // 修改 back-link 的 href，將當前回放 URL 傳回去
+    function setBackLink() {
+        const backLink = document.getElementById('back-link');
+        const currentUrl = window.location.href;
+        backLink.href = `index.html?last_replay_url=${encodeURIComponent(currentUrl)}`;
+    }
+
     initializeReplay();
+    setBackLink();
   </script>
 </body>
 </html>

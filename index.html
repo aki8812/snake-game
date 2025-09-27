@@ -27,7 +27,7 @@
     <div class="btn" id="left">←</div> <div class="btn" id="down">↓</div> <div class="btn" id="right">→</div>
   </div>
 
-  <a id="replay-link" href="#" target="_blank" style="display:none;">分享你的上一局回放！</a>
+  <a id="replay-link" href="#" style="display:none;">分享你的上一局回放！</a>
 
   <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-app.js"></script>
   <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-firestore.js"></script>
@@ -73,11 +73,21 @@
           snake: JSON.parse(JSON.stringify(snake)),
           apple: { ...apple }
       };
-      replayLink.style.display = "none";
+      // 移除 replayLink.style.display = "none";
       statusText.innerText = "請按 Enter 或觸控方向鍵開始";
     }
 
     resetGame();
+
+    // 新增：頁面載入時檢查是否有從回放頁返回
+    window.addEventListener('load', () => {
+        const urlParams = new URLSearchParams(window.location.search);
+        const lastReplayUrl = urlParams.get('last_replay_url');
+        if (lastReplayUrl) {
+            replayLink.href = lastReplayUrl;
+            replayLink.style.display = 'block';
+        }
+    });
 
     function handleDirectionChange(newDx, newDy, moveCode) {
         dx = newDx;
@@ -86,9 +96,15 @@
     }
 
     document.addEventListener("keydown", (e) => {
-      if (gameOver && e.key === "Enter") { resetGame(); return; }
+      if (gameOver && e.key === "Enter") {
+        resetGame();
+        // 這時候不清空 replay link，讓玩家可以再次點擊
+        return;
+      }
       if (!started) {
+        // 當玩家按下方向鍵或 Enter 開始新遊戲時，才隱藏回放按鈕
         if (["ArrowUp", "ArrowDown", "ArrowLeft", "ArrowRight", "Enter"].includes(e.key)) {
+          replayLink.style.display = 'none'; // 在這裡隱藏
           started = true;
           statusText.innerText = "";
           if (e.key === "ArrowUp") handleDirectionChange(0, -1, 'u');
