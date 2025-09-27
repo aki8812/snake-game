@@ -55,7 +55,7 @@
     const tileCount = canvas.width / gridSize;
 
     let snake, apple, dx, dy, score, bestScore, frameCount;
-    let gameHistory, initialState;
+    let gameHistory, initialState, appleHistory;
     let gameState = 'initial'; // 'initial', 'playing', 'gameOver'
 
     bestScore = parseInt(localStorage.getItem("bestScore")) || 0;
@@ -69,6 +69,7 @@
       gameState = 'initial';
       frameCount = 0;
       gameHistory = [];
+      appleHistory = [{ ...apple, frame: 0 }]; // 初始化並記錄第一顆蘋果
       initialState = {
           snake: JSON.parse(JSON.stringify(snake)),
           apple: { ...apple }
@@ -167,6 +168,7 @@
         const replayDoc = await db.collection("replays").add({
           initialState: initialState,
           moves: gameHistory,
+          appleHistory: appleHistory, // 新增
           finalScore: score,
           createdAt: firebase.firestore.FieldValue.serverTimestamp()
         });
@@ -187,6 +189,7 @@
         const replayDoc = await db.collection("replays").add({
           initialState: initialState,
           moves: gameHistory,
+          appleHistory: appleHistory, // 新增
           finalScore: score,
           createdAt: firebase.firestore.FieldValue.serverTimestamp()
         });
@@ -242,6 +245,7 @@
 
         if (emptyCells.length > 0) {
           apple = emptyCells[Math.floor(Math.random() * emptyCells.length)];
+          appleHistory.push({ ...apple, frame: frameCount }); // 新增：記錄新蘋果的位置和影格
         } else {
           // 如果沒有空位，這本身就是勝利條件
           // 雖然前面已經有檢查，但這裡再次調用以確保萬無一失
