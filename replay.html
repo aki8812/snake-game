@@ -104,29 +104,23 @@
       drawFrame(0);
     }
 
-    // --- 【修改】徹底重寫回放引擎，修復時序 (off-by-one) 錯誤 ---
     function generateFramesFromHistory(initialState, moves) {
         let snake = JSON.parse(JSON.stringify(initialState.snake));
         let apple = { ...initialState.apple };
         let score = 0;
-        let dx = 0, dy = 0; // 遊戲開始時是靜止的，等待第一個指令
+        let dx = 0, dy = 0;
         let frameCount = 0;
         let moveIndex = 0;
         const generatedFrames = [];
-
-        // 為了防止意外的無限迴圈，設定一個最大幀數
         const MAX_FRAMES = 15000;
 
         while (frameCount < MAX_FRAMES) {
-            // 1. 儲存當前幀的狀態，用於繪製。這是 `frameCount` 時間點的畫面。
             generatedFrames.push({
                 snake: JSON.parse(JSON.stringify(snake)),
                 apple: { ...apple },
                 score: score
             });
 
-            // 2. 處理即將在下一幀生效的指令。
-            // 檢查在 `frameCount` 這個時間點，玩家是否按下了按鍵。
             if (moveIndex < moves.length && moves[moveIndex].frame === frameCount) {
                 const move = moves[moveIndex].move;
                 if (move === 'u' && dy === 0) { dx = 0; dy = -1; }
@@ -136,29 +130,27 @@
                 moveIndex++;
             }
 
-            // 如果遊戲還沒開始 (dx, dy 皆為 0)，則不進行移動和碰撞檢測
             if (dx === 0 && dy === 0) {
                 frameCount++;
                 continue;
             }
 
-            // 3. 計算蛇頭在下一幀的位置
             const head = { x: snake[0].x + dx, y: snake[0].y + dy };
 
-            // 4. 檢查是否遊戲結束
             if (head.x < 0 || head.x >= tileCount || head.y < 0 || head.y >= tileCount || snake.some(s => s.x === head.x && s.y === head.y)) {
-                break; // 遊戲結束，模擬停止
+                break;
             }
 
-            // 5. 更新蛇的狀態，準備下一幀的畫面
             snake.unshift(head);
 
             if (head.x === apple.x && head.y === apple.y) {
                 score++;
-                // 【重要】蘋果生成邏輯必須與 index.html 完全一致
+                if (snake.length >= tileCount * tileCount) {
+                    break;
+                }
                 let newX, newY;
                 do {
-                    const tail = snake.length > 1 ? snake[1] : snake[0]; // 防禦性程式碼，防止蛇長度小於2時出錯
+                    const tail = snake.length > 1 ? snake[1] : snake[0];
                     newX = (snake[0].x * 3 + tail.x * 5 + score) % tileCount;
                     newY = (snake[0].y * 7 + tail.y * 2 + score) % tileCount;
                     apple = { x: newX, y: newY };
@@ -167,7 +159,6 @@
                 snake.pop();
             }
 
-            // 6. 推進時間
             frameCount++;
         }
         return generatedFrames;
