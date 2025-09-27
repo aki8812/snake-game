@@ -104,23 +104,35 @@
       drawFrame(0);
     }
 
+    // --- 【最終修改】以絕對精準的時序重寫回放引擎 ---
     function generateFramesFromHistory(initialState, moves) {
         let snake = JSON.parse(JSON.stringify(initialState.snake));
         let apple = { ...initialState.apple };
         let score = 0;
-        let dx = 0, dy = 0;
+        let dx = 0, dy = 0; // 遊戲開始時是靜止的
         let frameCount = 0;
         let moveIndex = 0;
         const generatedFrames = [];
-        const MAX_FRAMES = 15000;
+
+        // 遊戲開始時，如果沒有立即的操作，預設一個初始方向 (向右)
+        // 這確保了即使第一個指令在好幾幀之後，蛇也會從一開始就移動
+        if (moves.length === 0 || moves[0].frame > 0) {
+            dx = 1; dy = 0;
+        }
+
+        const MAX_FRAMES = 15000; // 安全機制，防止意外的無限迴圈
 
         while (frameCount < MAX_FRAMES) {
+            // 1. 儲存當前幀 (N) 的狀態，用於繪製。
+            // 這個狀態是基於 N-1 幀的指令計算而來的。
             generatedFrames.push({
                 snake: JSON.parse(JSON.stringify(snake)),
                 apple: { ...apple },
                 score: score
             });
 
+            // 2. 檢查在當前幀 (N)，玩家是否按下了按鍵。
+            // 這個指令將決定 N+1 幀的移動方向。
             if (moveIndex < moves.length && moves[moveIndex].frame === frameCount) {
                 const move = moves[moveIndex].move;
                 if (move === 'u' && dy === 0) { dx = 0; dy = -1; }
@@ -130,24 +142,30 @@
                 moveIndex++;
             }
 
+            // 如果還沒收到第一個指令，蛇保持不動
             if (dx === 0 && dy === 0) {
                 frameCount++;
                 continue;
             }
 
+            // 3. 計算蛇頭在下一幀的位置 (使用當前的 dx, dy)
             const head = { x: snake[0].x + dx, y: snake[0].y + dy };
 
+            // 4. 檢查是否遊戲結束 (撞牆或撞自己)
             if (head.x < 0 || head.x >= tileCount || head.y < 0 || head.y >= tileCount || snake.some(s => s.x === head.x && s.y === head.y)) {
-                break;
+                break; // 遊戲結束，停止模擬
             }
 
+            // 5. 更新蛇的狀態
             snake.unshift(head);
 
             if (head.x === apple.x && head.y === apple.y) {
                 score++;
+                // 檢查勝利條件
                 if (snake.length >= tileCount * tileCount) {
-                    break;
+                    break; // 勝利，停止模擬
                 }
+                // 生成新蘋果
                 let newX, newY;
                 do {
                     const tail = snake.length > 1 ? snake[1] : snake[0];
@@ -159,6 +177,7 @@
                 snake.pop();
             }
 
+            // 6. 推進時間
             frameCount++;
         }
         return generatedFrames;
