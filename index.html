@@ -54,30 +54,36 @@
     const gridSize = 20;
     const tileCount = canvas.width / gridSize;
 
-    let snake, apple, dx, dy, score, bestScore, started, gameOver, frameCount;
-    let gameHistory;
-    let initialState;
+    let snake, apple, dx, dy, score, bestScore, frameCount;
+    let gameHistory, initialState;
+    let gameState = 'initial'; // 'initial', 'playing', 'gameOver'
 
     bestScore = parseInt(localStorage.getItem("bestScore")) || 0;
     bestScoreText.innerText = "最佳分數：" + bestScore;
 
-    function resetGame() {
+    function resetGame(isFirstReset = true) {
       snake = [{ x: 10, y: 10 }];
       apple = { x: 15, y: 15 };
       dx = 0; dy = 0;
       score = 0;
-      started = false; gameOver = false;
+      gameState = 'initial';
       frameCount = 0;
       gameHistory = [];
       initialState = {
           snake: JSON.parse(JSON.stringify(snake)),
           apple: { ...apple }
       };
-      // 移除 replayLink.style.display = "none";
-      statusText.innerText = "請按 Enter 或觸控方向鍵開始";
+
+      // 只有在遊戲結束後的第一次重置時，才保留連結並提示
+      if (!isFirstReset) {
+        replayLink.style.display = "none";
+        statusText.innerText = "請按 Enter 或觸控方向鍵開始";
+      } else {
+        statusText.innerText = "請按 Enter 重新開始，或點擊上方連結觀看回放";
+      }
     }
 
-    resetGame();
+    resetGame(false);
 
     // 新增：頁面載入時檢查是否有從回放頁返回
     window.addEventListener('load', () => {
@@ -86,6 +92,8 @@
         if (lastReplayUrl) {
             replayLink.href = lastReplayUrl;
             replayLink.style.display = 'block';
+            gameState = 'gameOver'; // 如果是從回放頁回來的，狀態應為 gameOver
+            statusText.innerText = "請按 Enter 重新開始，或點擊上方連結觀看回放";
         }
     });
 
@@ -96,41 +104,50 @@
     }
 
     document.addEventListener("keydown", (e) => {
-      if (gameOver && e.key === "Enter") {
-        resetGame();
-        // 這時候不清空 replay link，讓玩家可以再次點擊
-        return;
+      switch (gameState) {
+        case 'initial':
+          if (["ArrowUp", "ArrowDown", "ArrowLeft", "ArrowRight", "Enter"].includes(e.key)) {
+            replayLink.style.display = 'none'; // 在這裡隱藏
+            gameState = 'playing';
+            statusText.innerText = "";
+            if (e.key === "ArrowUp") handleDirectionChange(0, -1, 'u');
+            else if (e.key === "ArrowDown") handleDirectionChange(0, 1, 'd');
+            else if (e.key === "ArrowLeft") handleDirectionChange(-1, 0, 'l');
+            else if (e.key === "ArrowRight" || e.key === "Enter") handleDirectionChange(1, 0, 'r');
+          }
+          break;
+        case 'playing':
+          if (e.key === "ArrowUp" && dy === 0) handleDirectionChange(0, -1, 'u');
+          else if (e.key === "ArrowDown" && dy === 0) handleDirectionChange(0, 1, 'd');
+          else if (e.key === "ArrowLeft" && dx === 0) handleDirectionChange(-1, 0, 'l');
+          else if (e.key === "ArrowRight" && dx === 0) handleDirectionChange(1, 0, 'r');
+          break;
+        case 'gameOver':
+          if (e.key === "Enter") {
+            resetGame(false); // 第二次 Enter，徹底重置
+          }
+          break;
       }
-      if (!started) {
-        // 當玩家按下方向鍵或 Enter 開始新遊戲時，才隱藏回放按鈕
-        if (["ArrowUp", "ArrowDown", "ArrowLeft", "ArrowRight", "Enter"].includes(e.key)) {
-          replayLink.style.display = 'none'; // 在這裡隱藏
-          started = true;
-          statusText.innerText = "";
-          if (e.key === "ArrowUp") handleDirectionChange(0, -1, 'u');
-          else if (e.key === "ArrowDown") handleDirectionChange(0, 1, 'd');
-          else if (e.key === "ArrowLeft") handleDirectionChange(-1, 0, 'l');
-          else if (e.key === "ArrowRight") handleDirectionChange(1, 0, 'r');
-          else if (e.key === "Enter") handleDirectionChange(1, 0, 'r');
-        }
-        return;
-      }
-      if (e.key === "ArrowUp" && dy === 0) handleDirectionChange(0, -1, 'u');
-      else if (e.key === "ArrowDown" && dy === 0) handleDirectionChange(0, 1, 'd');
-      else if (e.key === "ArrowLeft" && dx === 0) handleDirectionChange(-1, 0, 'l');
-      else if (e.key === "ArrowRight" && dx === 0) handleDirectionChange(1, 0, 'r');
     });
 
     function handleTouch(direction) {
-      if (gameOver) { resetGame(); return; }
-      if (!started) {
-        started = true; statusText.innerText = "";
-        if (dx === 0 && dy === 0) handleDirectionChange(1, 0, 'r');
+      switch (gameState) {
+        case 'initial':
+          replayLink.style.display = 'none';
+          gameState = 'playing';
+          statusText.innerText = "";
+          handleDirectionChange(1, 0, 'r'); // 觸控預設向右開始
+          break;
+        case 'playing':
+          if (direction === "up" && dy === 0) handleDirectionChange(0, -1, 'u');
+          else if (direction === "down" && dy === 0) handleDirectionChange(0, 1, 'd');
+          else if (direction === "left" && dx === 0) handleDirectionChange(-1, 0, 'l');
+          else if (direction === "right" && dx === 0) handleDirectionChange(1, 0, 'r');
+          break;
+        case 'gameOver':
+          resetGame(false);
+          break;
       }
-      if (direction === "up" && dy === 0) handleDirectionChange(0, -1, 'u');
-      else if (direction === "down" && dy === 0) handleDirectionChange(0, 1, 'd');
-      else if (direction === "left" && dx === 0) handleDirectionChange(-1, 0, 'l');
-      else if (direction === "right" && dx === 0) handleDirectionChange(1, 0, 'r');
     }
     document.getElementById("up").addEventListener("click", () => handleTouch("up"));
     document.getElementById("down").addEventListener("click", () => handleTouch("down"));
@@ -138,7 +155,7 @@
     document.getElementById("right").addEventListener("click", () => handleTouch("right"));
 
     async function handleWin() {
-      gameOver = true;
+      gameState = 'gameOver';
       if (score > bestScore) {
         bestScore = score;
         localStorage.setItem("bestScore", bestScore);
@@ -164,6 +181,7 @@
     }
 
     async function saveReplayToFirebase() {
+      gameState = 'gameOver';
       try {
         statusText.innerText = "正在上傳紀錄...";
         const replayDoc = await db.collection("replays").add({
@@ -183,14 +201,13 @@
     }
 
     function gameLoop() {
-      if (!started || gameOver) return;
+      if (gameState !== 'playing') return;
 
       frameCount++;
 
       const head = { x: snake[0].x + dx, y: snake[0].y + dy };
 
       if (head.x < 0 || head.x >= tileCount || head.y < 0 || head.y >= tileCount || snake.some(s => s.x === head.x && s.y === head.y)) {
-        gameOver = true;
         saveReplayToFirebase();
         if (score > bestScore) {
           bestScore = score;
@@ -211,13 +228,26 @@
           return;
         }
 
-        let newX, newY;
-        do {
-          const tail = snake.length > 1 ? snake[1] : snake[0];
-          newX = (snake[0].x * 3 + tail.x * 5 + score) % tileCount;
-          newY = (snake[0].y * 7 + tail.y * 2 + score) % tileCount;
-          apple = { x: newX, y: newY };
-        } while (snake.some(s => s.x === apple.x && s.y === apple.y));
+        // 【修復】使用更可靠的方法生成新蘋果，避免無限迴圈
+        const emptyCells = [];
+        const snakeCellSet = new Set(snake.map(s => `${s.x},${s.y}`));
+
+        for (let x = 0; x < tileCount; x++) {
+          for (let y = 0; y < tileCount; y++) {
+            if (!snakeCellSet.has(`${x},${y}`)) {
+              emptyCells.push({ x, y });
+            }
+          }
+        }
+
+        if (emptyCells.length > 0) {
+          apple = emptyCells[Math.floor(Math.random() * emptyCells.length)];
+        } else {
+          // 如果沒有空位，這本身就是勝利條件
+          // 雖然前面已經有檢查，但這裡再次調用以確保萬無一失
+          handleWin();
+          return;
+        }
       } else {
         snake.pop();
       }
