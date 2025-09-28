@@ -70,7 +70,7 @@
     const tileCount = canvas.width / gridSize;
 
     let snake, apple, dx, dy, score, bestScore, frameCount;
-    let gameHistory, initialState;
+    let gameHistory, initialState, appleHistory;
     let gameState = 'initial'; // 'initial', 'playing', 'gameOver'
 
     bestScore = parseInt(localStorage.getItem("bestScore")) || 0;
@@ -84,6 +84,7 @@
       gameState = 'initial';
       frameCount = 0;
       gameHistory = [];
+      appleHistory = [ { ...apple, frame: 0 } ]; // 初始化蘋果歷史
       initialState = {
           snake: JSON.parse(JSON.stringify(snake)),
           apple: { ...apple }
@@ -182,9 +183,10 @@
         const replayDoc = await db.collection("replays").add({
           initialState: initialState,
           moves: gameHistory,
+          appleHistory: appleHistory, // 儲存蘋果歷史
           finalScore: score,
           createdAt: firebase.firestore.FieldValue.serverTimestamp(),
-          algorithmVersion: 2 // 新增版本標籤
+          algorithmVersion: 3 // 版本提升至 3
         });
         console.log("Replay saved with ID: ", replayDoc.id);
         replayLink.href = `replay.html?id=${replayDoc.id}`;
@@ -203,9 +205,10 @@
         const replayDoc = await db.collection("replays").add({
           initialState: initialState,
           moves: gameHistory,
+          appleHistory: appleHistory, // 儲存蘋果歷史
           finalScore: score,
           createdAt: firebase.firestore.FieldValue.serverTimestamp(),
-          algorithmVersion: 2 // 新增版本標籤
+          algorithmVersion: 3 // 版本提升至 3
         });
         console.log("Replay saved with ID: ", replayDoc.id);
         replayLink.href = `replay.html?id=${replayDoc.id}`;
@@ -261,6 +264,7 @@
           const head = snake[0]; // 使用蛇頭和分數作為確定性因子
           const deterministicIndex = (head.x * 7 + head.y * 13 + score * 17) % emptyCells.length;
           apple = emptyCells[deterministicIndex];
+          appleHistory.push({ ...apple, frame: frameCount + 1 }); // 記錄新蘋果位置和幀數
         } else {
           // 如果沒有空位，這本身就是勝利條件
           // 雖然前面已經有檢查，但這裡再次調用以確保萬無一失

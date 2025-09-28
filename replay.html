@@ -108,13 +108,14 @@
 
     // --- 【最終修改】向下相容的回放引擎 ---
     function generateFramesFromHistory(data) {
-        const { initialState, moves, algorithmVersion } = data;
+        const { initialState, moves, algorithmVersion, appleHistory } = data; // 新增 appleHistory
         let snake = JSON.parse(JSON.stringify(initialState.snake));
         let apple = { ...initialState.apple };
         let score = 0;
         let dx = 0, dy = 0;
         let frameCount = 0;
         let moveIndex = 0;
+        let appleHistoryIndex = 1; // 從記錄的第二個蘋果開始
         const generatedFrames = [];
 
         if (moves.length === 0 || moves[0].frame > 0) {
@@ -159,9 +160,18 @@
                     break;
                 }
 
-                // --- 演算法選擇 ---
-                if (algorithmVersion === 2) {
-                    // 新版：穩定可靠的確定性演算法
+                // --- 演算法選擇 V3 ---
+                if (algorithmVersion >= 3 && appleHistory) {
+                    // V3：使用蘋果歷史紀錄
+                    if (appleHistoryIndex < appleHistory.length) {
+                        apple = appleHistory[appleHistoryIndex++];
+                    } else {
+                        // 歷史紀錄用完，理論上不該發生，但作為保險
+                        console.error("Apple history exhausted before game ended.");
+                        break;
+                    }
+                } else if (algorithmVersion === 2) {
+                    // V2：穩定可靠的確定性演算法
                     const emptyCells = [];
                     const snakeCellSet = new Set(snake.map(s => `${s.x},${s.y}`));
                     for (let x = 0; x < tileCount; x++) {
@@ -179,22 +189,22 @@
                         break;
                     }
                 } else {
-                    // 舊版：使用者指定的演算法，帶有安全保險絲
+                    // V1 或更早：舊版演算法
                     let newX, newY;
                     let attempts = 0;
                     const MAX_ATTEMPTS = 5000; // 安全保險絲
                     do {
-                        const tail = snake[snake.length - 1]; // 【修正】正確取得蛇的尾巴
+                        const tail = snake[snake.length - 1];
                         newX = (snake[0].x * 3 + tail.x * 5 + score) % tileCount;
                         newY = (snake[0].y * 7 + tail.y * 2 + score) % tileCount;
                         apple = { x: newX, y: newY };
                         attempts++;
                         if (attempts > MAX_ATTEMPTS) {
                             console.error("舊版回放演算法無法找到安全位置，已觸發安全保險絲。");
-                            break; // 跳出 do-while
+                            break;
                         }
                     } while (snake.some(s => s.x === apple.x && s.y === apple.y));
-                    if (attempts > MAX_ATTEMPTS) break; // 跳出 while
+                    if (attempts > MAX_ATTEMPTS) break;
                 }
             } else {
                 snake.pop();
