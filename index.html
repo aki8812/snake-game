@@ -88,9 +88,9 @@
     // 新增：頁面載入時檢查是否有從回放頁返回
     window.addEventListener('load', () => {
         const urlParams = new URLSearchParams(window.location.search);
-        const lastReplayUrl = urlParams.get('last_replay_url');
-        if (lastReplayUrl) {
-            replayLink.href = lastReplayUrl;
+        const lastReplayId = urlParams.get('last_replay_id');
+        if (lastReplayId) {
+            replayLink.href = `replay.html?id=${lastReplayId}`; // 根據 ID 重組 URL
             replayLink.style.display = 'block';
             gameState = 'gameOver'; // 如果是從回放頁回來的，狀態應為 gameOver
             statusText.innerText = "請按 Enter 重新開始，或點擊上方連結觀看回放";

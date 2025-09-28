@@ -12,7 +12,32 @@
     #controls { margin-top: 10px; display: flex; gap: 10px; align-items: center; }
     .btn { background: #444; color: white; padding: 10px 20px; border-radius: 10px; font-size: 16px; user-select: none; cursor: pointer; }
     .btn:active { background: #777; }
-    #progress-slider { width: 400px; margin-top: 15px; cursor: pointer; }
+    #progress-slider {
+      width: 400px; margin-top: 15px; cursor: pointer;
+      -webkit-appearance: none;
+      appearance: none;
+      height: 8px;
+      background: #333;
+      border-radius: 5px;
+      outline: none;
+    }
+    #progress-slider::-webkit-slider-thumb {
+      -webkit-appearance: none;
+      appearance: none;
+      width: 20px;
+      height: 20px;
+      background: #6cf;
+      border-radius: 50%;
+      cursor: pointer;
+    }
+    #progress-slider::-moz-range-thumb {
+      width: 20px;
+      height: 20px;
+      background: #6cf;
+      border-radius: 50%;
+      cursor: pointer;
+      border: none;
+    }
     #back-link { color: #6cf; margin-top: 20px; font-size: 18px; text-decoration: none; }
     #back-link:hover { text-decoration: underline; }
   </style>
@@ -61,6 +86,7 @@
     let currentFrameIndex = 0;
     let isPlaying = false;
     let playbackInterval;
+    let currentReplayId = null; // 在更廣的作用域中宣告
 
     function drawFrame(index) {
       const frame = replayData[index];
@@ -206,16 +232,18 @@
 
     async function initializeReplay() {
       const urlParams = new URLSearchParams(window.location.search);
-      const replayId = urlParams.get('id');
+      currentReplayId = urlParams.get('id'); // 賦值給更廣作用域的變數
 
-      if (!replayId) {
+      if (!currentReplayId) {
         statusText.textContent = "錯誤：URL 中找不到回放 ID。";
         return;
       }
 
+      setBackLink(); // 在拿到 ID 後立刻設定返回連結
+
       try {
         statusText.textContent = "正在從 Firebase 讀取紀錄...";
-        const doc = await db.collection("replays").doc(replayId).get();
+        const doc = await db.collection("replays").doc(currentReplayId).get();
 
         if (doc.exists) {
           const data = doc.data();
@@ -256,15 +284,15 @@
       }
     }
 
-    // 修改 back-link 的 href，將當前回放 URL 傳回去
+    // 修改 back-link 的 href，只傳遞 ID
     function setBackLink() {
         const backLink = document.getElementById('back-link');
-        const currentUrl = window.location.href;
-        backLink.href = `index.html?last_replay_url=${encodeURIComponent(currentUrl)}`;
+        if (currentReplayId) {
+            backLink.href = `index.html?last_replay_id=${currentReplayId}`;
+        }
     }
 
     initializeReplay();
-    setBackLink();
   </script>
 </body>
 </html>
