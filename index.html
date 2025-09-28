@@ -168,7 +168,8 @@
           initialState: initialState,
           moves: gameHistory,
           finalScore: score,
-          createdAt: firebase.firestore.FieldValue.serverTimestamp()
+          createdAt: firebase.firestore.FieldValue.serverTimestamp(),
+          algorithmVersion: 2 // 新增版本標籤
         });
         console.log("Replay saved with ID: ", replayDoc.id);
         replayLink.href = `replay.html?id=${replayDoc.id}`;
@@ -188,7 +189,8 @@
           initialState: initialState,
           moves: gameHistory,
           finalScore: score,
-          createdAt: firebase.firestore.FieldValue.serverTimestamp()
+          createdAt: firebase.firestore.FieldValue.serverTimestamp(),
+          algorithmVersion: 2 // 新增版本標籤
         });
         console.log("Replay saved with ID: ", replayDoc.id);
         replayLink.href = `replay.html?id=${replayDoc.id}`;

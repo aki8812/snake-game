@@ -105,22 +105,22 @@
       drawFrame(0);
     }
 
-    // --- 【最終修改】以絕對精準的時序重寫回放引擎 ---
-    function generateFramesFromHistory(initialState, moves) {
+    // --- 【最終修改】向下相容的回放引擎 ---
+    function generateFramesFromHistory(data) {
+        const { initialState, moves, algorithmVersion } = data;
         let snake = JSON.parse(JSON.stringify(initialState.snake));
         let apple = { ...initialState.apple };
         let score = 0;
-        let dx = 0, dy = 0; // 遊戲開始時是靜止的
+        let dx = 0, dy = 0;
         let frameCount = 0;
         let moveIndex = 0;
         const generatedFrames = [];
 
-        // 遊戲開始時，如果沒有立即的操作，預設一個初始方向 (向右)
         if (moves.length === 0 || moves[0].frame > 0) {
             dx = 1; dy = 0;
         }
 
-        const MAX_FRAMES = 15000; // 安全機制
+        const MAX_FRAMES = 15000;
 
         while (frameCount < MAX_FRAMES) {
             generatedFrames.push({
@@ -154,34 +154,50 @@
             if (head.x === apple.x && head.y === apple.y) {
                 score++;
                 if (snake.length >= tileCount * tileCount) {
-                    generatedFrames.push({ // 捕獲吃掉最後一個蘋果的幀
-                        snake: JSON.parse(JSON.stringify(snake)),
-                        apple: { ...apple },
-                        score: score
-                    });
+                    generatedFrames.push({ snake: JSON.parse(JSON.stringify(snake)), apple: { ...apple }, score: score });
                     break;
                 }
-                // 【修復】使用與 index.html 同步的確定性演算法
-                const emptyCells = [];
-                const snakeCellSet = new Set(snake.map(s => `${s.x},${s.y}`));
-                for (let x = 0; x < tileCount; x++) {
-                    for (let y = 0; y < tileCount; y++) {
-                        if (!snakeCellSet.has(`${x},${y}`)) {
-                            emptyCells.push({ x, y });
+
+                // --- 演算法選擇 ---
+                if (algorithmVersion === 2) {
+                    // 新版：穩定可靠的確定性演算法
+                    const emptyCells = [];
+                    const snakeCellSet = new Set(snake.map(s => `${s.x},${s.y}`));
+                    for (let x = 0; x < tileCount; x++) {
+                        for (let y = 0; y < tileCount; y++) {
+                            if (!snakeCellSet.has(`${x},${y}`)) {
+                                emptyCells.push({ x, y });
+                            }
                         }
                     }
-                }
-                if (emptyCells.length > 0) {
-                    const head = snake[0]; // 使用蛇頭和分數作為確定性因子
-                    const deterministicIndex = (head.x * 7 + head.y * 13 + score * 17) % emptyCells.length;
-                    apple = emptyCells[deterministicIndex];
+                    if (emptyCells.length > 0) {
+                        const head = snake[0];
+                        const deterministicIndex = (head.x * 7 + head.y * 13 + score * 17) % emptyCells.length;
+                        apple = emptyCells[deterministicIndex];
+                    } else {
+                        break;
+                    }
                 } else {
-                    break;
+                    // 舊版：使用者指定的演算法，帶有安全保險絲
+                    let newX, newY;
+                    let attempts = 0;
+                    const MAX_ATTEMPTS = 5000; // 安全保險絲
+                    do {
+                        const tail = snake.length > 1 ? snake[1] : snake[0];
+                        newX = (snake[0].x * 3 + tail.x * 5 + score) % tileCount;
+                        newY = (snake[0].y * 7 + tail.y * 2 + score) % tileCount;
+                        apple = { x: newX, y: newY };
+                        attempts++;
+                        if (attempts > MAX_ATTEMPTS) {
+                            console.error("舊版回放演算法無法找到安全位置，已觸發安全保險絲。");
+                            break; // 跳出 do-while
+                        }
+                    } while (snake.some(s => s.x === apple.x && s.y === apple.y));
+                    if (attempts > MAX_ATTEMPTS) break; // 跳出 while
                 }
             } else {
                 snake.pop();
             }
-
             frameCount++;
         }
         return generatedFrames;
@@ -205,7 +221,7 @@
           const data = doc.data();
           statusText.textContent = "正在產生回放畫面...";
 
-          replayData = generateFramesFromHistory(data.initialState, data.moves);
+          replayData = generateFramesFromHistory(data); // 傳入整個 data 物件
 
           if (replayData.length === 0) {
               statusText.textContent = "錯誤：無法生成回放資料，可能是紀錄有問題。";
