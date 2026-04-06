@@ -367,20 +367,28 @@
     });
 
     async function saveReplayToFirebase(win = false) {
+      const finalScore = score;
       gameState = 'gameOver';
+      
+      if (finalScore > bestScore) {
+        bestScore = finalScore;
+        localStorage.setItem("bestScore", bestScore);
+        bestScoreText.innerText = "最高：" + bestScore;
+      }
+
       try {
         statusText.innerText = "紀錄中...";
         const replayDoc = await db.collection("replays").add({
           initialState: initialState,
           moves: gameHistory,
-          finalScore: score,
+          finalScore: finalScore,
           createdAt: firebase.firestore.FieldValue.serverTimestamp(),
           algorithmVersion: 4
         });
         replayLink.href = `replay.html?id=${replayDoc.id}`;
         replayLink.style.display = "inline-block";
-        statusText.innerText = win ? "勝利！按 Enter 重新開始" : "得分：" + score + "。按 Enter 重新開始";
-        saveHistory(replayDoc.id, score);
+        statusText.innerText = win ? "勝利！按 Enter 重新開始" : "得分：" + finalScore + "。按 Enter 重新開始";
+        saveHistory(replayDoc.id, finalScore);
       } catch (error) {
         console.error(error);
         statusText.innerText = "儲存失敗。";
@@ -463,11 +471,6 @@
       const head = { x: snake[0].x + dx, y: snake[0].y + dy };
       if (head.x < 0 || head.x >= tileCount || head.y < 0 || head.y >= tileCount || snake.some(s => s.x === head.x && s.y === head.y)) {
         saveReplayToFirebase();
-        if (score > bestScore) {
-          bestScore = score;
-          localStorage.setItem("bestScore", bestScore);
-          bestScoreText.innerText = "最高：" + bestScore;
-        }
         return;
       }
 
