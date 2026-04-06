@@ -1,34 +1,96 @@
 <!DOCTYPE html>
-<html>
+<html lang="zh-TW">
 <head>
   <meta charset="UTF-8">
-  <title>貪吃蛇遊戲</title>
+  <title>🐍 貪吃蛇遊戲 | 極致經典重現</title>
+  <meta name="description" content="這是一款流暢且充滿樂趣的貪吃蛇遊戲，支援 PWA、回放分享以及最佳分數紀錄。">
   <link rel="icon" type="image/x-icon" href="favicon.ico">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <link rel="manifest" href="manifest.json">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
+  <meta name="theme-color" content="#000000">
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+  <link rel="apple-touch-icon" href="icon/icon-512x512.png">
   <style>
-    body { background-color: #000; display: flex; flex-direction: column; align-items: center; color: white; font-family: "微軟正黑體", sans-serif; margin: 0; }
-    canvas { background-color: #111; border: 3px solid #fff; margin-top: 10px; }
-    #status, #best-score { margin: 5px; }
-    #controls { margin-top: 10px; display: grid; grid-template-columns: 60px 60px 60px; gap: 10px; justify-content: center; touch-action: none; }
-    .btn { background: #444; color: white; padding: 15px; text-align: center; border-radius: 10px; font-size: 20px; user-select: none; }
-    .btn:active { background: #777; }
-    #replay-link { color: #6cf; margin-top: 15px; font-size: 18px; text-decoration: none; padding: 8px; border: 1px solid #6cf; border-radius: 5px; }
-    #replay-link:hover { background-color: #6cf; color: black; }
+    body { 
+      background-color: #000; 
+      display: flex; 
+      flex-direction: column; 
+      align-items: center; 
+      color: white; 
+      font-family: "Microsoft JhengHei", "微軟正黑體", sans-serif; 
+      margin: 0; 
+      padding-top: 20px;
+      touch-action: none;
+      user-select: none;
+      -webkit-user-select: none;
+      min-height: 100vh;
+      overflow-x: hidden;
+    }
+    h1 { margin: 10px 0; font-size: 28px; }
+    canvas { 
+      background-color: #111; 
+      border: 3px solid #fff; 
+      max-width: 90vw;
+      max-height: 90vw;
+      width: 400px;
+      height: 400px;
+      aspect-ratio: 1 / 1;
+      box-shadow: 0 0 20px rgba(255,255,255,0.1);
+    }
+    #status, #best-score { margin: 5px; font-weight: bold; }
+    #controls { 
+      margin-top: 20px; 
+      display: grid; 
+      grid-template-columns: repeat(3, 70px); 
+      gap: 15px; 
+      justify-content: center; 
+    }
+    .btn { 
+      background: #333; 
+      color: white; 
+      width: 70px;
+      height: 70px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      border-radius: 15px; 
+      font-size: 24px; 
+      user-select: none; 
+      -webkit-tap-highlight-color: transparent;
+      box-shadow: 0 4px 6px rgba(0,0,0,0.3);
+      border: 1px solid #444;
+      transition: background 0.1s;
+    }
+    .btn:active { background: #555; transform: scale(0.95); }
+    #replay-link { 
+      color: #74b9ff; 
+      margin-top: 20px; 
+      font-size: 18px; 
+      text-decoration: none; 
+      padding: 10px 20px; 
+      border: 1px solid #74b9ff; 
+      border-radius: 10px; 
+      transition: all 0.3s;
+    }
+    #replay-link:hover { background-color: #74b9ff; color: black; }
+    
+    #aki-footer {
+      position: fixed;
+      bottom: 20px;
+      left: 20px;
+      color: #ffeb3b;
+      font-weight: bold;
+      font-size: 14px;
+      font-family: 'Courier New', Courier, monospace;
+      z-index: 1000;
+      opacity: 0.8;
+    }
 
-    /* Custom Scrollbar Styles */
-    ::-webkit-scrollbar {
-      width: 10px;
-    }
-    ::-webkit-scrollbar-track {
-      background: #222;
-    }
-    ::-webkit-scrollbar-thumb {
-      background: #6cf; /* Light Blue */
-      border-radius: 5px;
-    }
-    ::-webkit-scrollbar-thumb:hover {
-      background: #8df;
-    }
+    ::-webkit-scrollbar { width: 8px; }
+    ::-webkit-scrollbar-track { background: #111; }
+    ::-webkit-scrollbar-thumb { background: #444; border-radius: 4px; }
+    ::-webkit-scrollbar-thumb:hover { background: #666; }
   </style>
 </head>
 <body>
@@ -42,12 +104,20 @@
     <div class="btn" id="left">←</div> <div class="btn" id="down">↓</div> <div class="btn" id="right">→</div>
   </div>
 
-  <a id="replay-link" href="#" style="display:none;">分享你的上一局回放！</a>
+  <a id="replay-link" href="#" style="display:none;">🔗 分享你的回放紀錄！</a>
+
+  <div id="aki-footer">Made by Aki</div>
 
   <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-app.js"></script>
   <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-firestore.js"></script>
 
   <script>
+    if ('serviceWorker' in navigator) {
+      window.addEventListener('load', () => {
+        navigator.serviceWorker.register('sw.js').catch(err => console.log('SW registration failed: ', err));
+      });
+    }
+
     const firebaseConfig = {
       apiKey: "AIzaSyAtkZyxuP2alDTUm1AA7EAlPYSvvZAznEI",
       authDomain: "cogent-altar-468009-p7.firebaseapp.com",
@@ -70,8 +140,8 @@
     const tileCount = canvas.width / gridSize;
 
     let snake, apple, dx, dy, score, bestScore, frameCount;
-    let gameHistory, initialState, appleHistory;
-    let gameState = 'initial'; // 'initial', 'playing', 'gameOver'
+    let gameHistory, initialState;
+    let gameState = 'initial';
 
     bestScore = parseInt(localStorage.getItem("bestScore")) || 0;
     bestScoreText.innerText = "最佳分數：" + bestScore;
@@ -84,139 +154,121 @@
       gameState = 'initial';
       frameCount = 0;
       gameHistory = [];
-      appleHistory = [ { ...apple, frame: 0 } ]; // 初始化蘋果歷史
       initialState = {
           snake: JSON.parse(JSON.stringify(snake)),
           apple: { ...apple }
       };
 
-      // 只有在遊戲結束後的第一次重置時，才保留連結並提示
       if (!isFirstReset) {
         replayLink.style.display = "none";
         statusText.innerText = "請按 Enter 或觸控方向鍵開始";
       } else {
-        statusText.innerText = "請按 Enter 重新開始，或點擊上方連結觀看回放";
+        statusText.innerText = "重新開始或觀看回放";
       }
     }
 
     resetGame(false);
 
-    // 新增：頁面載入時檢查是否有從回放頁返回
     window.addEventListener('load', () => {
         const urlParams = new URLSearchParams(window.location.search);
         const lastReplayId = urlParams.get('last_replay_id');
         if (lastReplayId) {
-            replayLink.href = `replay.html?id=${lastReplayId}`; // 根據 ID 重組 URL
+            replayLink.href = `replay.html?id=${lastReplayId}`;
             replayLink.style.display = 'block';
-            gameState = 'gameOver'; // 如果是從回放頁回來的，狀態應為 gameOver
-            statusText.innerText = "請按 Enter 重新開始，或點擊上方連結觀看回放";
+            gameState = 'gameOver';
+            statusText.innerText = "重新開始或觀看回放";
         }
     });
 
     function handleDirectionChange(newDx, newDy, moveCode) {
+        if (gameState === 'initial') {
+            gameState = 'playing';
+            statusText.innerText = "";
+            replayLink.style.display = 'none';
+        }
         dx = newDx;
         dy = newDy;
         gameHistory.push({ frame: frameCount, move: moveCode });
     }
 
     document.addEventListener("keydown", (e) => {
-      switch (gameState) {
-        case 'initial':
-          if (["ArrowUp", "ArrowDown", "ArrowLeft", "ArrowRight", "Enter"].includes(e.key)) {
-            replayLink.style.display = 'none'; // 在這裡隱藏
-            gameState = 'playing';
-            statusText.innerText = "";
-            if (e.key === "ArrowUp") handleDirectionChange(0, -1, 'u');
-            else if (e.key === "ArrowDown") handleDirectionChange(0, 1, 'd');
-            else if (e.key === "ArrowLeft") handleDirectionChange(-1, 0, 'l');
-            else if (e.key === "ArrowRight" || e.key === "Enter") handleDirectionChange(1, 0, 'r');
-          }
-          break;
-        case 'playing':
-          if (e.key === "ArrowUp" && dy === 0) handleDirectionChange(0, -1, 'u');
-          else if (e.key === "ArrowDown" && dy === 0) handleDirectionChange(0, 1, 'd');
-          else if (e.key === "ArrowLeft" && dx === 0) handleDirectionChange(-1, 0, 'l');
-          else if (e.key === "ArrowRight" && dx === 0) handleDirectionChange(1, 0, 'r');
-          break;
-        case 'gameOver':
-          if (e.key === "Enter") {
-            resetGame(false); // 第二次 Enter，徹底重置
-          }
-          break;
+      if (gameState === 'playing') {
+        if (e.key === "ArrowUp" && dy === 0) handleDirectionChange(0, -1, 'u');
+        else if (e.key === "ArrowDown" && dy === 0) handleDirectionChange(0, 1, 'd');
+        else if (e.key === "ArrowLeft" && dx === 0) handleDirectionChange(-1, 0, 'l');
+        else if (e.key === "ArrowRight" && dx === 0) handleDirectionChange(1, 0, 'r');
+      } else if (gameState === 'initial') {
+        if (e.key === "ArrowUp") handleDirectionChange(0, -1, 'u');
+        else if (e.key === "ArrowDown") handleDirectionChange(0, 1, 'd');
+        else if (e.key === "ArrowLeft") handleDirectionChange(-1, 0, 'l');
+        else if (e.key === "ArrowRight" || e.key === "Enter") handleDirectionChange(1, 0, 'r');
+      } else if (gameState === 'gameOver' && e.key === "Enter") {
+        resetGame(false);
       }
     });
 
     function handleTouch(direction) {
-      switch (gameState) {
-        case 'initial':
-          replayLink.style.display = 'none';
-          gameState = 'playing';
-          statusText.innerText = "";
-          handleDirectionChange(1, 0, 'r'); // 觸控預設向右開始
-          break;
-        case 'playing':
-          if (direction === "up" && dy === 0) handleDirectionChange(0, -1, 'u');
-          else if (direction === "down" && dy === 0) handleDirectionChange(0, 1, 'd');
-          else if (direction === "left" && dx === 0) handleDirectionChange(-1, 0, 'l');
-          else if (direction === "right" && dx === 0) handleDirectionChange(1, 0, 'r');
-          break;
-        case 'gameOver':
-          resetGame(false);
-          break;
-      }
-    }
-    document.getElementById("up").addEventListener("click", () => handleTouch("up"));
-    document.getElementById("down").addEventListener("click", () => handleTouch("down"));
-    document.getElementById("left").addEventListener("click", () => handleTouch("left"));
-    document.getElementById("right").addEventListener("click", () => handleTouch("right"));
-
-    async function handleWin() {
-      gameState = 'gameOver';
-      if (score > bestScore) {
-        bestScore = score;
-        localStorage.setItem("bestScore", bestScore);
-        bestScoreText.innerText = "最佳分數：" + bestScore;
-      }
-
-      try {
-        statusText.innerText = "正在上傳紀錄...";
-        const replayDoc = await db.collection("replays").add({
-          initialState: initialState,
-          moves: gameHistory,
-          appleHistory: appleHistory, // 儲存蘋果歷史
-          finalScore: score,
-          createdAt: firebase.firestore.FieldValue.serverTimestamp(),
-          algorithmVersion: 3 // 版本提升至 3
-        });
-        console.log("Replay saved with ID: ", replayDoc.id);
-        replayLink.href = `replay.html?id=${replayDoc.id}`;
-        replayLink.style.display = "block";
-        statusText.innerText = "恭喜你！完全勝利！請按 Enter 重新開始";
-      } catch (error) {
-        console.error("Error saving replay: ", error);
-        statusText.innerText = "儲存紀錄失敗，請檢查主控台錯誤訊息。";
+      if (gameState === 'playing') {
+        if (direction === "up" && dy === 0) handleDirectionChange(0, -1, 'u');
+        else if (direction === "down" && dy === 0) handleDirectionChange(0, 1, 'd');
+        else if (direction === "left" && dx === 0) handleDirectionChange(-1, 0, 'l');
+        else if (direction === "right" && dx === 0) handleDirectionChange(1, 0, 'r');
+      } else if (gameState === 'initial') {
+        if (direction === "up") handleDirectionChange(0, -1, 'u');
+        else if (direction === "down") handleDirectionChange(0, 1, 'd');
+        else if (direction === "left") handleDirectionChange(-1, 0, 'l');
+        else handleDirectionChange(1, 0, 'r');
+      } else if (gameState === 'gameOver') {
+        resetGame(false);
       }
     }
 
-    async function saveReplayToFirebase() {
+    const setupBtn = (id, dir) => {
+      const btn = document.getElementById(id);
+      btn.addEventListener('pointerdown', (e) => {
+        e.preventDefault();
+        handleTouch(dir);
+      });
+    };
+    setupBtn("up", "up");
+    setupBtn("down", "down");
+    setupBtn("left", "left");
+    setupBtn("right", "right");
+
+    async function saveReplayToFirebase(win = false) {
       gameState = 'gameOver';
       try {
         statusText.innerText = "正在上傳紀錄...";
         const replayDoc = await db.collection("replays").add({
           initialState: initialState,
           moves: gameHistory,
-          appleHistory: appleHistory, // 儲存蘋果歷史
           finalScore: score,
           createdAt: firebase.firestore.FieldValue.serverTimestamp(),
-          algorithmVersion: 3 // 版本提升至 3
+          algorithmVersion: 4
         });
-        console.log("Replay saved with ID: ", replayDoc.id);
         replayLink.href = `replay.html?id=${replayDoc.id}`;
         replayLink.style.display = "block";
-        statusText.innerText = "遊戲結束！你的分數是：" + score + "，請按 Enter 重新開始";
+        statusText.innerText = win ? "恭喜你！完全勝利！" : "遊戲結束！分數：" + score;
       } catch (error) {
         console.error("Error saving replay: ", error);
-        statusText.innerText = "儲存紀錄失敗，請檢查主控台錯誤訊息。";
+        statusText.innerText = "儲存紀錄失敗。";
+      }
+    }
+
+    function generateApple() {
+      const emptyCells = [];
+      const snakeCellSet = new Set(snake.map(s => `${s.x},${s.y}`));
+      for (let x = 0; x < tileCount; x++) {
+        for (let y = 0; y < tileCount; y++) {
+          if (!snakeCellSet.has(`${x},${y}`)) emptyCells.push({ x, y });
+        }
+      }
+      if (emptyCells.length > 0) {
+        const h = snake[0];
+        const deterministicIndex = (h.x * 7 + h.y * 13 + score * 17 + frameCount * 3) % emptyCells.length;
+        apple = emptyCells[deterministicIndex];
+      } else {
+        saveReplayToFirebase(true);
       }
     }
 
@@ -224,7 +276,6 @@
       if (gameState !== 'playing') return;
 
       frameCount++;
-
       const head = { x: snake[0].x + dx, y: snake[0].y + dy };
 
       if (head.x < 0 || head.x >= tileCount || head.y < 0 || head.y >= tileCount || snake.some(s => s.x === head.x && s.y === head.y)) {
@@ -241,52 +292,54 @@
 
       if (head.x === apple.x && head.y === apple.y) {
         score++;
-
-        // 【新增】勝利條件判斷：如果蛇身填滿畫面，則獲勝
         if (snake.length >= tileCount * tileCount) {
-          handleWin();
+          saveReplayToFirebase(true);
           return;
         }
-
-        // 【修復】使用確定性演算法生成新蘋果，確保回放一致性
-        const emptyCells = [];
-        const snakeCellSet = new Set(snake.map(s => `${s.x},${s.y}`));
-
-        for (let x = 0; x < tileCount; x++) {
-          for (let y = 0; y < tileCount; y++) {
-            if (!snakeCellSet.has(`${x},${y}`)) {
-              emptyCells.push({ x, y });
-            }
-          }
-        }
-
-        if (emptyCells.length > 0) {
-          const head = snake[0]; // 使用蛇頭和分數作為確定性因子
-          const deterministicIndex = (head.x * 7 + head.y * 13 + score * 17) % emptyCells.length;
-          apple = emptyCells[deterministicIndex];
-          appleHistory.push({ ...apple, frame: frameCount + 1 }); // 記錄新蘋果位置和幀數
-        } else {
-          // 如果沒有空位，這本身就是勝利條件
-          // 雖然前面已經有檢查，但這裡再次調用以確保萬無一失
-          handleWin();
-          return;
-        }
+        generateApple();
       } else {
         snake.pop();
       }
 
       ctx.clearRect(0, 0, canvas.width, canvas.height);
-      ctx.fillStyle = "red";
+      ctx.fillStyle = "#ff4757";
       ctx.fillRect(apple.x * gridSize, apple.y * gridSize, gridSize, gridSize);
-      ctx.fillStyle = "lime";
+      ctx.fillStyle = "#2ed573";
       for (let s of snake) {
         ctx.fillRect(s.x * gridSize, s.y * gridSize, gridSize - 1, gridSize - 1);
       }
       ctx.fillStyle = "white";
+      ctx.font = "bold 16px sans-serif";
       ctx.fillText("分數：" + score, 10, 390);
     }
 
     setInterval(gameLoop, 150);
+
+    // Aki Footer Animation
+    const footer = document.getElementById('aki-footer');
+    if (footer) {
+      const text = footer.textContent;
+      footer.textContent = '';
+      const spans = [];
+      for (let char of text) {
+        const span = document.createElement('span');
+        span.textContent = char;
+        if (char === ' ') span.style.width = '0.5em';
+        span.className = 'char-span';
+        footer.appendChild(span);
+        spans.push(span);
+      }
+      document.addEventListener('mousemove', (e) => {
+        spans.forEach(span => {
+          const rect = span.getBoundingClientRect();
+          const distance = Math.sqrt(Math.pow(e.clientX - (rect.left + rect.width/2), 2) + Math.pow(e.clientY - (rect.top + rect.height/2), 2));
+          if (distance < 60) {
+            const force = (60 - distance) / 60;
+            span.style.transform = `translate(${-(e.clientX - (rect.left + rect.width/2)) / distance * force * 10}px, ${-(e.clientY - (rect.top + rect.height/2)) / distance * force * 10}px)`;
+          } else span.style.transform = 'translate(0, 0)';
+        });
+      });
+    }
   </script>
 </body>
 </html>
