@@ -13,32 +13,47 @@
   <link href="https://fonts.googleapis.com/css2?family=Roboto+Mono:wght@300;400;500&display=swap" rel="stylesheet">
   <style>
     body { 
-      background-color: #0b0e11; 
+      background-color: #000; 
       display: flex; 
       flex-direction: column; 
       align-items: center; 
       color: white; 
       font-family: "Microsoft JhengHei", "微軟正黑體", sans-serif; 
       margin: 0; 
-      padding: 10px 0;
+      padding: 15px 0;
       touch-action: none;
       user-select: none;
       -webkit-user-select: none;
       min-height: 100vh;
       overflow: hidden;
     }
-    h1 { margin: 5px 0; font-size: 22px; color: #fff; }
     
-    #status { margin: 2px 0; font-size: 14px; color: #aaa; height: 1.2em; }
+    .header-container {
+      display: flex;
+      align-items: center;
+      gap: 15px;
+      margin-bottom: 5px;
+    }
+    h1 { margin: 0; font-size: 26px; color: #fff; }
+
+    #history-toggle {
+      width: 32px;
+      height: 32px;
+      cursor: pointer;
+      transition: transform 0.2s;
+    }
+    #history-toggle:hover { transform: scale(1.1); }
+
+    #status { margin: 2px 0; font-size: 14px; color: #aaa; min-height: 1.25em; }
     
     #top-bar {
       display: flex;
       justify-content: space-between;
       width: 320px;
       max-width: 90vw;
-      margin-bottom: 5px;
-      font-size: 14px;
-      color: #6cf;
+      margin-bottom: 8px;
+      font-size: 16px;
+      color: #fff;
     }
 
     #game-container {
@@ -51,7 +66,7 @@
     }
     canvas { 
       background-color: #111; 
-      border: 2px solid #333; 
+      border: 3px solid #fff; 
       width: 100%;
       height: 100%;
       display: block;
@@ -59,66 +74,53 @@
     }
 
     #controls { 
-      margin-top: 10px; 
+      margin-top: 15px; 
       display: grid; 
-      grid-template-columns: repeat(3, 60px); 
-      gap: 10px; 
+      grid-template-columns: repeat(3, 65px); 
+      gap: 12px; 
       justify-content: center; 
     }
     .btn { 
-      background: rgba(255, 255, 255, 0.08);
-      backdrop-filter: blur(5px);
-      -webkit-backdrop-filter: blur(5px);
-      color: #ddd; 
-      width: 60px;
-      height: 60px;
+      background: rgba(255, 255, 255, 0.1);
+      backdrop-filter: blur(8px);
+      -webkit-backdrop-filter: blur(8px);
+      color: #fff; 
+      width: 65px;
+      height: 65px;
       display: flex;
       align-items: center;
       justify-content: center;
-      border-radius: 15px; 
+      border-radius: 12px; 
       font-size: 24px; 
       cursor: pointer;
-      border: 1px solid rgba(255, 255, 255, 0.1);
+      border: 1px solid rgba(255, 255, 255, 0.15);
       transition: all 0.2s ease;
       -webkit-tap-highlight-color: transparent;
     }
     .btn:hover {
-      background: rgba(255, 255, 255, 0.15);
-      transform: scale(1.08);
-      border-color: rgba(102, 204, 255, 0.4);
+      background: rgba(255, 255, 255, 0.2);
+      transform: scale(1.1);
     }
     .btn:active { 
       transform: scale(0.95);
-      background: rgba(102, 204, 255, 0.2);
+      background: rgba(255, 255, 255, 0.3);
     }
 
     #replay-link { 
       color: #6cf; 
-      margin-top: 10px; 
-      font-size: 14px; 
+      margin-top: 15px; 
+      font-size: 16px; 
       text-decoration: none; 
-      padding: 6px 12px; 
+      padding: 8px 16px; 
       border: 1px solid #6cf; 
-      border-radius: 4px; 
+      border-radius: 5px; 
       transition: all 0.2s;
     }
-
-    #history-toggle {
-      position: fixed;
-      bottom: 20px;
-      right: 20px;
-      width: 50px;
-      height: 50px;
-      cursor: pointer;
-      filter: drop-shadow(0 2px 8px rgba(0,0,0,0.5));
-      transition: transform 0.2s;
-    }
-    #history-toggle:hover { transform: scale(1.1); }
 
     #history-modal {
       position: fixed;
       inset: 0;
-      background: rgba(0, 0, 0, 0.85);
+      background: rgba(0, 0, 0, 0.8);
       display: none;
       align-items: center;
       justify-content: center;
@@ -129,52 +131,67 @@
     #modal-content {
       background: #1c1f22;
       width: 100%;
-      max-width: 350px;
+      max-width: 340px;
       border-radius: 12px;
-      padding: 15px;
+      padding: 20px;
       display: flex;
       flex-direction: column;
-      max-height: 80vh;
+      max-height: 70vh;
+      box-shadow: 0 10px 40px rgba(0,0,0,0.5);
     }
     .modal-header {
       display: flex;
       justify-content: space-between;
       align-items: center;
-      margin-bottom: 15px;
+      margin-bottom: 20px;
     }
-    .modal-header h2 { margin: 0; font-size: 18px; color: #fff; }
-    .clear-btn { color: #f44336; cursor: pointer; font-size: 14px; margin-right: 15px; }
-    .close-btn { color: #fff; cursor: pointer; font-size: 24px; }
+    .modal-header h2 { margin: 0; font-size: 20px; font-weight: bold; }
+    .clear-btn { color: #ff5252; cursor: pointer; font-size: 15px; margin-right: 15px; font-weight: bold; }
+    .close-btn { color: #fff; cursor: pointer; font-size: 28px; line-height: 1; }
     #history-list {
       flex: 1;
       overflow-y: auto;
-      padding-right: 5px;
+      display: flex;
+      flex-direction: column;
+    }
+    .empty-msg {
+      flex: 1;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      color: #5f6368;
+      font-size: 16px;
+      padding: 40px 0;
     }
     .history-item {
       background: #2a2d31;
-      padding: 12px;
+      padding: 15px;
       border-radius: 8px;
-      margin-bottom: 10px;
+      margin-bottom: 12px;
       display: flex;
       justify-content: space-between;
       align-items: center;
       cursor: pointer;
-      position: relative;
     }
-    .history-info div:first-child { font-size: 14px; color: #fff; margin-bottom: 4px; }
-    .history-info div:last-child { font-size: 11px; color: #7c8187; }
-    .delete-item { color: #f44336; padding: 5px; font-size: 18px; }
+    .history-info div:first-child { font-size: 15px; color: #fff; margin-bottom: 5px; font-weight: bold; }
+    .history-info div:last-child { font-size: 12px; color: #888; }
+    .delete-item { color: #ff5252; padding: 5px 10px; font-size: 20px; }
 
-    ::-webkit-scrollbar { width: 6px; }
+    ::-webkit-scrollbar { width: 8px; }
     ::-webkit-scrollbar-track { background: transparent; }
-    ::-webkit-scrollbar-thumb { background: #3b4050; border-radius: 3px; }
+    ::-webkit-scrollbar-thumb { background: #3b4050; border-radius: 4px; }
   </style>
 </head>
 <body>
-  <h1>🐍 貪吃蛇遊戲</h1>
+  <div class="header-container">
+    <h1>🐍 貪吃蛇遊戲</h1>
+    <img id="history-toggle" src="https://img.icons8.com/color/96/scroll.png" alt="點擊查看紀錄">
+  </div>
+  
   <p id="status">請按 Enter 或觸控方向鍵開始</p>
+  
   <div id="top-bar">
-    <span id="best-score">最佳：0</span>
+    <span id="best-score">最高：0</span>
     <span id="current-score">得分：0</span>
   </div>
   
@@ -187,9 +204,7 @@
     <div class="btn" id="left">←</div> <div class="btn" id="down">↓</div> <div class="btn" id="right">→</div>
   </div>
 
-  <a id="replay-link" href="#" style="display:none;">分享上局回放</a>
-
-  <img id="history-toggle" src="https://img.icons8.com/color/96/scroll.png" alt="歷史紀錄">
+  <a id="replay-link" href="#" style="display:none;">觀看上一局回放</a>
 
   <div id="history-modal">
     <div id="modal-content">
@@ -248,7 +263,7 @@
     const gameSpeed = 150; 
 
     bestScore = parseInt(localStorage.getItem("bestScore")) || 0;
-    bestScoreText.innerText = "最佳：" + bestScore;
+    bestScoreText.innerText = "最高：" + bestScore;
 
     function resetGame(isFirstReset = true) {
       snake = [{ x: 10, y: 10 }];
@@ -270,6 +285,7 @@
       } else {
         statusText.innerText = "按 Enter 重新開始或查看回放";
       }
+      renderHistory();
     }
 
     resetGame(false);
@@ -368,19 +384,23 @@
 
     function renderHistory() {
       const history = JSON.parse(localStorage.getItem('snakeHistory') || '[]');
-      historyList.innerHTML = history.length ? '' : '<div style="text-align:center;color:#555;margin-top:40px;">尚無紀錄</div>';
-      history.forEach((item, idx) => {
-        const div = document.createElement('div');
-        div.className = 'history-item';
-        div.innerHTML = `
-          <div class="history-info" onclick="window.location.href='replay.html?id=${item.id}'">
-            <div>得分：${item.score}</div>
-            <div>${item.date}</div>
-          </div>
-          <span class="delete-item" onclick="deleteHistory(${idx}, event)">&times;</span>
-        `;
-        historyList.appendChild(div);
-      });
+      if (history.length === 0) {
+        historyList.innerHTML = '<div class="empty-msg">尚無紀錄</div>';
+      } else {
+        historyList.innerHTML = '';
+        history.forEach((item, idx) => {
+          const div = document.createElement('div');
+          div.className = 'history-item';
+          div.innerHTML = `
+            <div class="history-info" onclick="window.location.href='replay.html?id=${item.id}'">
+              <div>得分：${item.score}</div>
+              <div>${item.date}</div>
+            </div>
+            <span class="delete-item" onclick="deleteHistory(${idx}, event)">&times;</span>
+          `;
+          historyList.appendChild(div);
+        });
+      }
     }
     
     window.deleteHistory = (idx, e) => {
@@ -397,9 +417,17 @@
         renderHistory();
       }
     };
-    historyToggle.onclick = () => historyModal.classList.add('open');
+    historyToggle.onclick = () => {
+      pauseGame();
+      historyModal.classList.add('open');
+    };
     closeModal.onclick = () => historyModal.classList.remove('open');
     historyModal.onclick = (e) => { if (e.target === historyModal) historyModal.classList.remove('open'); };
+
+    function pauseGame() {
+      // Logic to pause if playing, but current engine only ticks if gameState === 'playing'
+      // If we open modal while playing, it is better to not move.
+    }
 
     function generateApple() {
       const emptyCells = [];
@@ -420,7 +448,7 @@
 
     function gameLoop(currentTime) {
       requestAnimationFrame(gameLoop);
-      if (gameState !== 'playing') return;
+      if (gameState !== 'playing' || historyModal.classList.contains('open')) return;
       if (currentTime - lastTime < gameSpeed) return;
       lastTime = currentTime;
 
@@ -431,7 +459,7 @@
         if (score > bestScore) {
           bestScore = score;
           localStorage.setItem("bestScore", bestScore);
-          bestScoreText.innerText = "最佳：" + bestScore;
+          bestScoreText.innerText = "最高：" + bestScore;
         }
         return;
       }
