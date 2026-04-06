@@ -1,26 +1,27 @@
 <!DOCTYPE html>
 <html lang="zh-TW">
+
 <head>
   <meta charset="UTF-8">
-  <title>🐍 貪吃蛇遊戲</title>
-  <meta name="description" content="這是一款流暢且充滿樂趣的貪吃蛇遊戲，支援 PWA、回放分享以及最佳分數紀錄。">
+  <title>貪吃蛇遊戲</title>
   <link rel="icon" type="image/x-icon" href="favicon.ico">
   <link rel="manifest" href="manifest.json">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
+  <meta name="viewport"
+    content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
   <meta name="theme-color" content="#000000">
   <meta name="apple-mobile-web-app-capable" content="yes">
   <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
   <link rel="apple-touch-icon" href="icon/icon-512x512.png">
   <link href="https://fonts.googleapis.com/css2?family=Roboto+Mono:wght@300;400;500&display=swap" rel="stylesheet">
   <style>
-    body { 
-      background-color: #000; 
-      display: flex; 
-      flex-direction: column; 
-      align-items: center; 
-      color: white; 
-      font-family: "Microsoft JhengHei", "微軟正黑體", sans-serif; 
-      margin: 0; 
+    body {
+      background-color: #000;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      color: white;
+      font-family: "Microsoft JhengHei", "微軟正黑體", sans-serif;
+      margin: 0;
       padding-top: 20px;
       touch-action: none;
       user-select: none;
@@ -28,49 +29,68 @@
       min-height: 100vh;
       overflow-x: hidden;
     }
-    h1 { margin: 10px 0; font-size: 28px; }
-    #status, #best-score { margin: 5px; }
-    canvas { 
-      background-color: #111; 
-      border: 3px solid #fff; 
+
+    h1 {
+      margin: 10px 0;
+      font-size: 28px;
+    }
+
+    #status,
+    #best-score {
+      margin: 5px;
+    }
+
+    canvas {
+      background-color: #111;
+      border: 3px solid #fff;
       max-width: 90vw;
       width: 400px;
       height: 400px;
       aspect-ratio: 1 / 1;
     }
-    #controls { 
-      margin-top: 15px; 
-      display: grid; 
-      grid-template-columns: repeat(3, 70px); 
-      gap: 12px; 
-      justify-content: center; 
+
+    #controls {
+      margin-top: 15px;
+      display: grid;
+      grid-template-columns: repeat(3, 70px);
+      gap: 12px;
+      justify-content: center;
     }
-    .btn { 
-      background: #444; 
-      color: white; 
+
+    .btn {
+      background: #444;
+      color: white;
       width: 70px;
       height: 70px;
       display: flex;
       align-items: center;
       justify-content: center;
-      border-radius: 10px; 
-      font-size: 24px; 
-      user-select: none; 
+      border-radius: 10px;
+      font-size: 24px;
+      user-select: none;
       -webkit-tap-highlight-color: transparent;
       transition: background 0.1s;
     }
-    .btn:active { background: #777; }
-    #replay-link { 
-      color: #6cf; 
-      margin-top: 20px; 
-      font-size: 18px; 
-      text-decoration: none; 
-      padding: 8px 16px; 
-      border: 1px solid #6cf; 
-      border-radius: 5px; 
+
+    .btn:active {
+      background: #777;
     }
-    #replay-link:hover { background-color: #6cf; color: black; }
-    
+
+    #replay-link {
+      color: #6cf;
+      margin-top: 20px;
+      font-size: 18px;
+      text-decoration: none;
+      padding: 8px 16px;
+      border: 1px solid #6cf;
+      border-radius: 5px;
+    }
+
+    #replay-link:hover {
+      background-color: #6cf;
+      color: black;
+    }
+
     #aki-footer {
       position: fixed;
       bottom: 20px;
@@ -86,14 +106,32 @@
       z-index: 2147483647;
       pointer-events: auto;
     }
-    .char-span { display: inline-block; transition: transform 0.1s ease-out; will-change: transform; }
 
-    ::-webkit-scrollbar { width: 10px; }
-    ::-webkit-scrollbar-track { background: #222; }
-    ::-webkit-scrollbar-thumb { background: #6cf; border-radius: 5px; }
-    ::-webkit-scrollbar-thumb:hover { background: #8df; }
+    .char-span {
+      display: inline-block;
+      transition: transform 0.1s ease-out;
+      will-change: transform;
+    }
+
+    ::-webkit-scrollbar {
+      width: 10px;
+    }
+
+    ::-webkit-scrollbar-track {
+      background: #222;
+    }
+
+    ::-webkit-scrollbar-thumb {
+      background: #6cf;
+      border-radius: 5px;
+    }
+
+    ::-webkit-scrollbar-thumb:hover {
+      background: #8df;
+    }
   </style>
 </head>
+
 <body>
   <h1>🐍 貪吃蛇遊戲</h1>
   <p id="status">請按 Enter 或觸控方向鍵開始</p>
@@ -104,8 +142,12 @@
   <canvas id="game" width="400" height="400"></canvas>
 
   <div id="controls">
-    <div></div> <div class="btn" id="up">↑</div> <div></div>
-    <div class="btn" id="left">←</div> <div class="btn" id="down">↓</div> <div class="btn" id="right">→</div>
+    <div></div>
+    <div class="btn" id="up">↑</div>
+    <div></div>
+    <div class="btn" id="left">←</div>
+    <div class="btn" id="down">↓</div>
+    <div class="btn" id="right">→</div>
   </div>
 
   <a id="replay-link" href="#" style="display:none;">分享你的上一局回放！</a>
@@ -118,7 +160,7 @@
   <script>
     if ('serviceWorker' in navigator) {
       window.addEventListener('load', () => {
-        navigator.serviceWorker.register('sw.js').catch(() => {});
+        navigator.serviceWorker.register('sw.js').catch(() => { });
       });
     }
 
@@ -159,8 +201,8 @@
       frameCount = 0;
       gameHistory = [];
       initialState = {
-          snake: JSON.parse(JSON.stringify(snake)),
-          apple: { ...apple }
+        snake: JSON.parse(JSON.stringify(snake)),
+        apple: { ...apple }
       };
 
       if (!isFirstReset) {
@@ -174,25 +216,25 @@
     resetGame(false);
 
     window.addEventListener('load', () => {
-        const urlParams = new URLSearchParams(window.location.search);
-        const lastReplayId = urlParams.get('last_replay_id');
-        if (lastReplayId) {
-            replayLink.href = `replay.html?id=${lastReplayId}`;
-            replayLink.style.display = 'block';
-            gameState = 'gameOver';
-            statusText.innerText = "請按 Enter 重新開始，或點擊上方連結觀看回放";
-        }
+      const urlParams = new URLSearchParams(window.location.search);
+      const lastReplayId = urlParams.get('last_replay_id');
+      if (lastReplayId) {
+        replayLink.href = `replay.html?id=${lastReplayId}`;
+        replayLink.style.display = 'block';
+        gameState = 'gameOver';
+        statusText.innerText = "請按 Enter 重新開始，或點擊上方連結觀看回放";
+      }
     });
 
     function handleDirectionChange(newDx, newDy, moveCode) {
-        if (gameState === 'initial') {
-            gameState = 'playing';
-            statusText.innerText = "";
-            replayLink.style.display = 'none';
-        }
-        dx = newDx;
-        dy = newDy;
-        gameHistory.push({ frame: frameCount, move: moveCode });
+      if (gameState === 'initial') {
+        gameState = 'playing';
+        statusText.innerText = "";
+        replayLink.style.display = 'none';
+      }
+      dx = newDx;
+      dy = newDy;
+      gameHistory.push({ frame: frameCount, move: moveCode });
     }
 
     document.addEventListener("keydown", (e) => {
@@ -336,14 +378,15 @@
       document.addEventListener('mousemove', (e) => {
         spans.forEach(span => {
           const rect = span.getBoundingClientRect();
-          const distance = Math.sqrt(Math.pow(e.clientX - (rect.left + rect.width/2), 2) + Math.pow(e.clientY - (rect.top + rect.height/2), 2));
+          const distance = Math.sqrt(Math.pow(e.clientX - (rect.left + rect.width / 2), 2) + Math.pow(e.clientY - (rect.top + rect.height / 2), 2));
           if (distance < 60) {
             const force = (60 - distance) / 60;
-            span.style.transform = `translate(${-(e.clientX - (rect.left + rect.width/2)) / distance * force * 10}px, ${-(e.clientY - (rect.top + rect.height/2)) / distance * force * 10}px)`;
+            span.style.transform = `translate(${-(e.clientX - (rect.left + rect.width / 2)) / distance * force * 10}px, ${-(e.clientY - (rect.top + rect.height / 2)) / distance * force * 10}px)`;
           } else span.style.transform = 'translate(0, 0)';
         });
       });
     }
   </script>
 </body>
+
 </html>
