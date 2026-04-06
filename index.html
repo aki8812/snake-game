@@ -20,39 +20,40 @@
       color: white; 
       font-family: "Microsoft JhengHei", "微軟正黑體", sans-serif; 
       margin: 0; 
-      padding: 15px 0;
+      padding: 40px 0 20px 0; 
       touch-action: none;
       user-select: none;
       -webkit-user-select: none;
       min-height: 100vh;
       overflow: hidden;
+      box-sizing: border-box;
     }
     
     .header-container {
       display: flex;
       align-items: center;
-      gap: 15px;
-      margin-bottom: 5px;
+      gap: 12px;
+      margin-bottom: 8px;
     }
-    h1 { margin: 0; font-size: 26px; color: #fff; }
+    h1 { margin: 0; font-size: 24px; color: #fff; }
 
     #history-toggle {
-      width: 32px;
-      height: 32px;
+      width: 28px;
+      height: 28px;
       cursor: pointer;
       transition: transform 0.2s;
     }
     #history-toggle:hover { transform: scale(1.1); }
 
-    #status { margin: 2px 0; font-size: 14px; color: #aaa; min-height: 1.25em; }
+    #status { margin: 2px 0; font-size: 13px; color: #aaa; min-height: 1.2em; text-align: center; }
     
     #top-bar {
       display: flex;
       justify-content: space-between;
       width: 320px;
-      max-width: 90vw;
-      margin-bottom: 8px;
-      font-size: 16px;
+      max-width: 85vw;
+      margin-bottom: 10px;
+      font-size: 15px;
       color: #fff;
     }
 
@@ -60,8 +61,8 @@
       position: relative;
       width: 320px;
       height: 320px;
-      max-width: 85vw;
-      max-height: 85vw;
+      max-width: 80vw;
+      max-height: 80vw;
       aspect-ratio: 1/1;
     }
     canvas { 
@@ -71,13 +72,14 @@
       height: 100%;
       display: block;
       image-rendering: pixelated;
+      box-sizing: border-box;
     }
 
     #controls { 
-      margin-top: 15px; 
+      margin-top: 25px; 
       display: grid; 
-      grid-template-columns: repeat(3, 65px); 
-      gap: 12px; 
+      grid-template-columns: repeat(3, 62px); 
+      gap: 15px; 
       justify-content: center; 
     }
     .btn { 
@@ -85,69 +87,73 @@
       backdrop-filter: blur(8px);
       -webkit-backdrop-filter: blur(8px);
       color: #fff; 
-      width: 65px;
-      height: 65px;
+      width: 62px;
+      height: 62px;
       display: flex;
       align-items: center;
       justify-content: center;
-      border-radius: 12px; 
+      border-radius: 14px; 
       font-size: 24px; 
       cursor: pointer;
       border: 1px solid rgba(255, 255, 255, 0.15);
-      transition: all 0.2s ease;
+      transition: all 0.15s ease;
       -webkit-tap-highlight-color: transparent;
+      touch-action: manipulation;
     }
     .btn:hover {
-      background: rgba(255, 255, 255, 0.2);
-      transform: scale(1.1);
+      background: rgba(255, 255, 255, 0.18);
+      transform: scale(1.05); 
     }
     .btn:active { 
-      transform: scale(0.95);
-      background: rgba(255, 255, 255, 0.3);
+      transform: scale(0.96);
+      background: rgba(255, 255, 255, 0.25);
     }
 
     #replay-link { 
       color: #6cf; 
       margin-top: 15px; 
-      font-size: 16px; 
+      font-size: 15px; 
       text-decoration: none; 
-      padding: 8px 16px; 
+      padding: 6px 14px; 
       border: 1px solid #6cf; 
-      border-radius: 5px; 
+      border-radius: 4px; 
       transition: all 0.2s;
     }
 
     #history-modal {
       position: fixed;
       inset: 0;
-      background: rgba(0, 0, 0, 0.8);
+      background: rgba(0, 0, 0, 0.82);
       display: none;
       align-items: center;
       justify-content: center;
-      z-index: 5000;
+      z-index: 9999;
       padding: 20px;
     }
     #history-modal.open { display: flex; }
     #modal-content {
       background: #1c1f22;
       width: 100%;
-      max-width: 340px;
+      max-width: 320px;
       border-radius: 12px;
-      padding: 20px;
+      padding: 18px;
       display: flex;
       flex-direction: column;
-      max-height: 70vh;
-      box-shadow: 0 10px 40px rgba(0,0,0,0.5);
+      max-height: 75vh;
+      box-shadow: 0 10px 40px rgba(0,0,0,0.6);
     }
     .modal-header {
       display: flex;
       justify-content: space-between;
       align-items: center;
       margin-bottom: 20px;
+      padding-bottom: 10px;
+      border-bottom: 1px solid #333;
     }
-    .modal-header h2 { margin: 0; font-size: 20px; font-weight: bold; }
-    .clear-btn { color: #ff5252; cursor: pointer; font-size: 15px; margin-right: 15px; font-weight: bold; }
-    .close-btn { color: #fff; cursor: pointer; font-size: 28px; line-height: 1; }
+    .modal-header h2 { margin: 0; font-size: 18px; }
+    .clear-btn { color: #ff5252; cursor: pointer; font-size: 14px; margin-right: 12px; font-weight: bold; }
+    .close-btn { color: #fff; cursor: pointer; font-size: 26px; line-height: 1; }
+    
     #history-list {
       flex: 1;
       overflow-y: auto;
@@ -159,33 +165,37 @@
       display: flex;
       align-items: center;
       justify-content: center;
-      color: #5f6368;
-      font-size: 16px;
-      padding: 40px 0;
+      color: #666;
+      font-size: 15px;
+      height: 150px;
+      text-align: center;
     }
     .history-item {
       background: #2a2d31;
-      padding: 15px;
+      padding: 14px;
       border-radius: 8px;
-      margin-bottom: 12px;
+      margin-bottom: 10px;
       display: flex;
       justify-content: space-between;
       align-items: center;
       cursor: pointer;
+      transition: background 0.2s;
     }
-    .history-info div:first-child { font-size: 15px; color: #fff; margin-bottom: 5px; font-weight: bold; }
-    .history-info div:last-child { font-size: 12px; color: #888; }
-    .delete-item { color: #ff5252; padding: 5px 10px; font-size: 20px; }
+    .history-item:active { background: #353a40; }
+    .history-info { flex: 1; pointer-events: none; } 
+    .history-info div:first-child { font-size: 15px; color: #fff; margin-bottom: 4px; font-weight: bold; }
+    .history-info div:last-child { font-size: 11px; color: #777; }
+    .delete-item { color: #ff5252; padding: 10px; font-size: 20px; cursor: pointer; }
 
-    ::-webkit-scrollbar { width: 8px; }
+    ::-webkit-scrollbar { width: 6px; }
     ::-webkit-scrollbar-track { background: transparent; }
-    ::-webkit-scrollbar-thumb { background: #3b4050; border-radius: 4px; }
+    ::-webkit-scrollbar-thumb { background: #3b4050; border-radius: 3px; }
   </style>
 </head>
 <body>
   <div class="header-container">
     <h1>🐍 貪吃蛇遊戲</h1>
-    <img id="history-toggle" src="https://img.icons8.com/color/96/scroll.png" alt="點擊查看紀錄">
+    <img id="history-toggle" src="https://img.icons8.com/color/96/scroll.png" alt="歷史紀錄">
   </div>
   
   <p id="status">請按 Enter 或觸控方向鍵開始</p>
@@ -283,7 +293,7 @@
         replayLink.style.display = "none";
         statusText.innerText = "請按 Enter 或觸控方向鍵開始";
       } else {
-        statusText.innerText = "按 Enter 重新開始或查看回放";
+        statusText.innerText = "按 Enter 重新開始或觀看回放";
       }
       renderHistory();
     }
@@ -297,7 +307,7 @@
         replayLink.href = `replay.html?id=${lastReplayId}`;
         replayLink.style.display = 'inline-block';
         gameState = 'gameOver';
-        statusText.innerText = "按 Enter 重新開始或查看回放";
+        statusText.innerText = "按 Enter 重新開始或觀看回放";
       }
       renderHistory();
     });
@@ -348,10 +358,12 @@
     }
 
     ["up", "down", "left", "right"].forEach(dir => {
-      document.getElementById(dir).addEventListener('pointerdown', (e) => {
+      const btn = document.getElementById(dir);
+      const trigger = (e) => {
         e.preventDefault();
         handleTouch(dir);
-      });
+      };
+      btn.addEventListener('pointerdown', trigger);
     });
 
     async function saveReplayToFirebase(win = false) {
@@ -391,10 +403,13 @@
         history.forEach((item, idx) => {
           const div = document.createElement('div');
           div.className = 'history-item';
+          div.onclick = () => window.location.href = `replay.html?id=${item.id}`; 
+          const fullUrl = `replay.html?id=${item.id}`;
           div.innerHTML = `
-            <div class="history-info" onclick="window.location.href='replay.html?id=${item.id}'">
+            <div class="history-info">
               <div>得分：${item.score}</div>
               <div>${item.date}</div>
+              <div style="font-size: 10px; color: #555; word-break: break-all; margin-top: 4px;">URL: ${fullUrl}</div>
             </div>
             <span class="delete-item" onclick="deleteHistory(${idx}, event)">&times;</span>
           `;
@@ -417,17 +432,9 @@
         renderHistory();
       }
     };
-    historyToggle.onclick = () => {
-      pauseGame();
-      historyModal.classList.add('open');
-    };
+    historyToggle.onclick = () => historyModal.classList.add('open');
     closeModal.onclick = () => historyModal.classList.remove('open');
     historyModal.onclick = (e) => { if (e.target === historyModal) historyModal.classList.remove('open'); };
-
-    function pauseGame() {
-      // Logic to pause if playing, but current engine only ticks if gameState === 'playing'
-      // If we open modal while playing, it is better to not move.
-    }
 
     function generateApple() {
       const emptyCells = [];
