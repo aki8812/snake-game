@@ -151,7 +151,22 @@
       border-bottom: 1px solid #333;
     }
     .modal-header h2 { margin: 0; font-size: 18px; }
-    .clear-btn { color: #ff5252; cursor: pointer; font-size: 14px; margin-right: 12px; font-weight: bold; }
+    
+    .clear-btn { 
+      color: #ff5252; 
+      cursor: pointer; 
+      font-size: 14px; 
+      margin-right: 12px; 
+      font-weight: bold; 
+      transition: all 0.2s;
+      white-space: nowrap;
+    }
+    .clear-btn.confirming {
+      background: rgba(255, 82, 82, 0.1);
+      padding: 4px 8px;
+      border-radius: 4px;
+    }
+
     .close-btn { color: #fff; cursor: pointer; font-size: 26px; line-height: 1; }
     
     #history-list {
@@ -434,12 +449,24 @@
       renderHistory();
     };
 
+    let clearConfirmTimeout;
     clearHistory.onclick = () => {
-      if (confirm('確定清空所有紀錄嗎？')) {
+      if (clearHistory.classList.contains('confirming')) {
         localStorage.removeItem('snakeHistory');
         renderHistory();
+        clearHistory.classList.remove('confirming');
+        clearHistory.innerText = '清空';
+        clearTimeout(clearConfirmTimeout);
+      } else {
+        clearHistory.classList.add('confirming');
+        clearHistory.innerText = '確定清空？';
+        clearConfirmTimeout = setTimeout(() => {
+          clearHistory.classList.remove('confirming');
+          clearHistory.innerText = '清空';
+        }, 3000);
       }
     };
+
     historyToggle.onclick = () => historyModal.classList.add('open');
     closeModal.onclick = () => historyModal.classList.remove('open');
     historyModal.onclick = (e) => { if (e.target === historyModal) historyModal.classList.remove('open'); };
@@ -488,10 +515,10 @@
 
       ctx.clearRect(0, 0, canvas.width, canvas.height);
       ctx.fillStyle = "red";
-      ctx.fillRect(apple.x * gridSize, apple.y * gridSize, gridSize, gridSize);
+      ctx.fillRect(apple.x * gridSize + 1, apple.y * gridSize + 1, gridSize - 2, gridSize - 2);
       ctx.fillStyle = "lime";
       for (let s of snake) {
-        ctx.fillRect(s.x * gridSize, s.y * gridSize, gridSize - 1, gridSize - 1);
+        ctx.fillRect(s.x * gridSize + 1, s.y * gridSize + 1, gridSize - 2, gridSize - 2);
       }
       currentScoreText.innerText = "得分：" + score;
     }

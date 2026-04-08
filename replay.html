@@ -161,10 +161,10 @@
 
       ctx.clearRect(0, 0, canvas.width, canvas.height);
       ctx.fillStyle = "red";
-      ctx.fillRect(frame.apple.x * gridSize, frame.apple.y * gridSize, gridSize, gridSize);
+      ctx.fillRect(frame.apple.x * gridSize + 1, frame.apple.y * gridSize + 1, gridSize - 2, gridSize - 2);
       ctx.fillStyle = "lime";
       for (let s of frame.snake) {
-        ctx.fillRect(s.x * gridSize, s.y * gridSize, gridSize - 1, gridSize - 1);
+        ctx.fillRect(s.x * gridSize + 1, s.y * gridSize + 1, gridSize - 2, gridSize - 2);
       }
       scoreText.innerText = "得分：" + frame.score;
       progressSlider.value = index;
